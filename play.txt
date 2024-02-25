@@ -1370,7 +1370,7 @@ Group 8: (Blocks 65537-73728) csum 0x06c0 [INODE_UNINIT, BLOCK_UNINIT]
   Inode bitmap at 279 (bg #0 + 278), csum 0x00000000
   Inode table at 2315-2568 (bg #0 + 2314)
   8192 free blocks, 2032 free inodes, 0 directories, 2032 unused inodes
-  Free blocks: 65537-73728
+  Free blocks: 65537-73728 
   Free inodes: 16257-18288
 Group 9: (Blocks 73729-81920) csum 0xfbd4 [INODE_UNINIT, BLOCK_UNINIT]
   Backup superblock at 73729, Group descriptors at 73730-73730
@@ -2073,6 +2073,82 @@ mdadm: stopped /dev/md0
 05. Extending Permissions with ACLS
 ===============================================================================
 
+Access Control Lists (ACLs) are used to extend or enhance 
+the traditional Unix file permissions system. 
+
+While traditional Unix permissions (read, write, 
+execute for owner, group, and others) are straightforward,
+ACLs provide a more fine-grained control over file and directory 
+access by allowing additional rules for specific users or groups.
+
+
+Basic ACL Concepts:
+-------------------------------
+
+Default Unix Permissions:
+-------------------------------
+        Traditional Unix permissions consist of 
+            read, 
+            write, and 
+            execute 
+        
+        permissions for the owner, group, and others.
+
+
+ACL Entries:
+-------------------------------
+        ACLs introduce additional entries for specific 
+            users or groups, 
+        allowing you to set more granular permissions.
+
+
+
+
+Setting ACLs:
+-------------------------------
+      You can set ACLs using commands like 
+          setfacl 
+      on Linux systems.
+
+
+
+
+ACL Entries Syntax:
+------------------------
+u: 
+    followed by the username 
+    specifies ACL for a specific user.
+
+g: 
+    followed by the group name 
+    specifies ACL for a specific group.
+
+mask: 
+    specifies the maximum permissions 
+    that can be granted by the ACL entries.
+
+other: 
+    specifies the default permissions 
+    for users not covered by other ACL entries.
+
+
+
+
+
+Important Notes:
+-----------------------
+      * ACLs are supported on many Unix-like systems, including Linux.
+      * Be cautious when using ACLs to avoid overly complex permission structures.
+      * Regular Unix permissions still apply in conjunction with ACLs.
+      * ACLs can be inherited by child directories and files.
+
+    Always refer to the man pages (man setfacl) or documentation
+    specific to your operating system for detailed and accurate
+    information on ACL usage on your system.
+
+
+
+
 
 
 
@@ -2083,9 +2159,59 @@ mdadm: stopped /dev/md0
 
 
 
-
 05_02-ACL Support within the Kernel and Filesystems
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+[root@server1 ~]# useradd mivaan ............... create a noral user
+[root@server1 ~]# passwd mivaan
+
+[root@server1 ~]# su - mivaan
+
+
+[mivaan@server1 ~]$ whoami
+mivaan
+
+
+
+[mivaan@server1 ~]$ uname -r    .......................... viewing kernel of ur OS
+4.18.0-540.el8.x86_64
+
+
+[mivaan@server1 ~]$ ls /boot/config-4.18.0-540.el8.x86_64
+/boot/config-4.18.0-540.el8.x86_64
+
+
+
+[mivaan@server1 ~]$ grep ACL /boot/config-$(uname -r)
+CONFIG_EXT4_FS_POSIX_ACL=y
+CONFIG_XFS_POSIX_ACL=y
+CONFIG_FS_POSIX_ACL=y
+CONFIG_TMPFS_POSIX_ACL=y
+CONFIG_NFS_V3_ACL=y
+CONFIG_NFSD_V2_ACL=y
+CONFIG_NFSD_V3_ACL=y
+CONFIG_NFS_ACL_SUPPORT=m
+CONFIG_CEPH_FS_POSIX_ACL=y
+ 
+
+
+
+[mivaan@server1 ~]$ mount | grep data
+/dev/sdb6 on /data/mydata type ext4 (rw,noexec,relatime,seclabel)
+/dev/sdb7 on /data/mydata2 type xfs (rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=32k,noquota)
+
+
+
+
+[mivaan@server1 ~]$ sudo tune2fs -l /dev/sdb6  | grep -i default
+Default mount options:    user_xattr acl    ............................. user_extended and acl attributes for mount options
+Default directory hash:   half_md4
+
+
+
+
 
 
 
@@ -2094,16 +2220,272 @@ mdadm: stopped /dev/md0
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
+[mivaan@server1 ~]$ pwd
+/home/mivaan
+
+
+[mivaan@server1 ~]$ ls -A
+.bash_logout  .bash_profile  .bashrc
+
+
+[mivaan@server1 ~]$ ls -a
+.  ..  .bash_logout  .bash_profile  .bashrc
+
+
+
+
+[mivaan@server1 ~]$ ls -l
+total 0
+c 1 root   root   0 Feb 25 08:01 file1 
+-rw-r--r--. 1 root   root   0 Feb 25 08:01 file2
+-rw-rw-r--. 1 mivaan mivaan 0 Feb 25 08:01 myfile4
+-rw-rw-r--. 1 mivaan mivaan 0 Feb 25 08:01 myflr3
+
+
+
+                    -rw-r--r--.    -------------(.) dot , is entry reprenstnt ACL
+
+
+
+
+[mivaan@server1 ~]$ getfacl  file1    .................. ACL of any file
+# file: file1
+# owner: root
+# group: root
+user::rw-
+group::r--
+other::r--
+
+
+[mivaan@server1 ~]$ getfacl  myfile4
+# file: myfile4
+# owner: mivaan
+# group: mivaan
+user::rw-
+group::rw-
+other::r--
+
+
+
+
+
 
 
 05_04-Setting Default ACLS
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[mivaan@server1 ~]$ mkdir test-acl
+
+[mivaan@server1 ~]$ ls -ld test-acl/
+drwxrwxr-x. 2 mivaan mivaan 6 Feb 25 08:05 test-acl/    ............ (.) dot says no ACL is configured , it means a ACL support
+
+
+        
+
+[mivaan@server1 ~]$ getfacl  test-acl/
+# file: test-acl/
+# owner: mivaan
+# group: mivaan
+user::rwx
+group::rwx
+other::r-x                ........... other can read  mivaan file by defauld, due to umask
+
+
+
+[mivaan@server1 ~]$ umask        ............deafut permission made in OS
+0002
+
+
+setting acl on dir, -m: modify, d: default, o: others , ---: nothing permission
+------------------------------------------------------------------------------
+
+[mivaan@server1 ~]$ setfacl -m d:o:--- test-acl/  
+
+
+
+[mivaan@server1 ~]$ ls -ld test-acl/
+drwxrwxr-x+ 2 mivaan mivaan 6 Feb 25 08:05 test-acl/    ..........(+) ACL is setup
+
+
+
+[mivaan@server1 ~]$ getfacl  test-acl/
+# file: test-acl/
+# owner: mivaan
+# group: mivaan
+user::rwx
+group::rwx
+other::r-x
+default:user::rwx
+default:group::rwx
+default:other::---        .................. checkng WHAT ACL is etup as , others as nothing , i.e ---
+
+
+
+
+
+
+
+
+
+
+test on file
+--------------
+
+
+[mivaan@server1 ~]$ touch test-acl/file1
+
+[mivaan@server1 ~]$ ls -l test-acl/file1
+-rw-rw----. 1 mivaan mivaan 0 Feb 25 08:15 test-acl/file1      .......... ACL (.) not set
+
+
+
+[mivaan@server1 ~]$ getfacl test-acl/file1
+# file: test-acl/file1
+# owner: mivaan
+# group: mivaan
+user::rw-
+group::rw-
+other::---
+
+
+
+
+[mivaan@server1 ~]$ setfacl -d -m u:ram:rw test-acl/
+
+
+[mivaan@server1 ~]$ getfacl test-acl/
+# file: test-acl/
+# owner: mivaan
+# group: mivaan
+user::rwx
+group::rwx
+other::r-x
+default:user::rwx
+default:user:ram:rw-        ............ACL given for ram
+default:group::rwx
+default:mask::rwx
+default:other::---
+
+
+
+
+[mivaan@server1 ~]$ touch test-acl/file2
+
+[mivaan@server1 ~]$ ls -l test-acl/
+total 0
+-rw-rw----. 1 mivaan mivaan 0 Feb 25 08:15 file1
+-rw-rw----+ 1 mivaan mivaan 0 Feb 25 08:21 file2      ...............ACL is set for file2 ....
+
+
+[mivaan@server1 ~]$ getfacl test-acl/file1
+# file: test-acl/file1
+# owner: mivaan
+# group: mivaan
+user::rw-
+group::rw-
+other::---
+
+
+
+[mivaan@server1 ~]$ getfacl test-acl/file2
+# file: test-acl/file2
+# owner: mivaan
+# group: mivaan
+user::rw-
+user:ram:rw-            ..................................ACL for ram after setfacl
+group::rwx                      #effective:rw-
+mask::rw-
+other::---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 05_05-Adding ACL Entries
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+
+[mivaan@server1 ~]$ su root
+Password:
+
+
+[root@server1 ~]#
+
+
+[root@server1 ~]# mkdir /work
+
+
+[root@server1 ~]# ls -ld /work/
+drwxr-xr-x. 2 root root 6 Feb 25 08:26 /work/
+
+
+[root@server1 ~]# chmod  o= /work/
+
+
+[root@server1 ~]# su  - mivaan
+[mivaan@server1 ~]$ cd /work/
+-bash: cd: /work/: Permission denied    .......... not permission for mivaan
+
+
+[mivaan@server1 ~]$ ls -ld /work/
+drwxr-x---. 2 root root 6 Feb 25 08:26 /work/
+
+
+
+
+
+
+
+
+
+
+[mivaan@server1 ~]$ exit
+logout
+[root@server1 ~]#
+[root@server1 ~]# setfacl -m u:mivaan:rx /work/
+
+[root@server1 ~]# getfacl /work/
+getfacl: Removing leading '/' from absolute path names
+# file: work/
+# owner: root
+# group: root
+user::rwx
+user:mivaan:r-x      .............set for mivaan :rx
+group::r-x
+mask::r-x
+other::---
+
+
+
+[root@server1 ~]# su - mivaan
+[mivaan@server1 ~]$ cd /work/    ................. now mivaan has Access to the /wok folder using ACL
+[mivaan@server1 work]$ touch file3
+touch: cannot touch 'file3': Permission denied
+
+
+
+
+
+
+
+
+
+ 
 
 
 
@@ -2125,7 +2507,7 @@ mdadm: stopped /dev/md0
 
 
 ===============================================================================
-
+06. Managing Logical Volumes
 ===============================================================================
 
 
