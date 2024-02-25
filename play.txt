@@ -994,17 +994,153 @@ sr0                 11:0    1 1024M  0 rom
 
 
 
+[root@server1 ~]# cat partions_script.sh
+#!/bin/bash
+DISK="/dev/sdb"
+echo " Create MBR partition table and extended partition across disk "
+# Create MBR partition table and extended partition across disk
+parted -s $DISK -- mklabel msdos mkpart extended 1m -1m
+
+sleep 3
+
+echo "Create swap partition as partition 5 the first logical parition "
+#Create swap partition as partition 5 the first logical parition
+parted -s $DISK mkpart logical linux-swap 2m 100m #5
+
+sleep 3
+parted -s $DISK mkpart logical 101m 200m     #6
+parted -s $DISK mkpart logical 201m 300m     #7
+parted -s $DISK mkpart logical 301m 400m     #8
+parted -s $DISK mkpart logical 401m 500m     #9
+
+sleep 3
+echo "Create 3 more logical partitons for LVMs "
+#Create 3 more logical partitons for LVMs
+parted -s $DISK mkpart logical 501m 600m     #10
+parted -s $DISK mkpart logical 601m 700m     #11
+parted -s $DISK mkpart logical 701m 800m     #12
 
 
-:wq
+sleep 3
+echo "set partion 10, 11, 12 to lvm"
+parted -s $DISK set 10 lvm on   # set partion 10 to lvm
+parted -s $DISK set 11 lvm on   # set partion 11 to lvm
+parted -s $DISK set 12 lvm on   # set partion 12 to lvm
 
-chmod +x part.sh
-./part.sh
+sleep 3
 
-lsblk
-fdisl -l /dev/sdb
+echo "Create 2 more partions for RAID  "
+#Create 2 more partions for RAID
+parted -s $DISK mkpart logical 801m 900m #13
+parted -s $DISK mkpart logical 901m 1000m #14
+parted -s $DISK set 13 raid on     # set partition 13 to RAID
+parted -s $DISK set 14 raid on     # set partion 14 to RAID
+parted -s $DISK print
 
- dd if=/dev/sda  count=1 bs=512 of=/dev/sdb.mbr ....... backup of MBR
+echo "FINISHED "
+
+
+[root@server1 ~]# chmod +x partions_script.sh
+
+
+[root@server1 ~]# ./partions_script.sh
+ Create MBR partition table and extended partition across disk
+Create swap partition as partition 5 the first logical parition
+Create 3 more logical partitons for LVMs
+set partion 10, 11, 12 to lvm
+Create 2 more partions for RAID
+
+Model: VMware, VMware Virtual S (scsi)
+Disk /dev/sdb: 8590MB
+Sector size (logical/physical): 512B/512B
+Partition Table: msdos
+Disk Flags:
+
+Number  Start   End     Size    Type      File system  Flags
+ 1      1049kB  8589MB  8588MB  extended               lba
+ 5      2097kB  99.6MB  97.5MB  logical
+ 6      101MB   200MB   99.6MB  logical
+ 7      201MB   300MB   98.6MB  logical
+ 8      301MB   400MB   98.6MB  logical
+ 9      401MB   500MB   99.6MB  logical
+10      501MB   600MB   98.6MB  logical                lvm
+11      601MB   700MB   99.6MB  logical                lvm
+12      701MB   800MB   98.6MB  logical                lvm
+13      801MB   900MB   98.6MB  logical                raid
+14      901MB   1000MB  99.6MB  logical                raid
+
+FINISHED
+[root@server1 ~]#
+
+
+[root@server1 ~]# echo $?
+0
+
+
+
+
+[root@server1 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                  8:0    0   30G  0 disk
+├─sda1               8:1    0    1G  0 part /boot
+└─sda2               8:2    0   29G  0 part
+  ├─cs_master-root 253:0    0   26G  0 lvm  /
+  └─cs_master-swap 253:1    0    3G  0 lvm  [SWAP]
+sdb                  8:16   0    8G  0 disk
+├─sdb1               8:17   0    1K  0 part
+├─sdb5               8:21   0   93M  0 part
+├─sdb6               8:22   0   95M  0 part
+├─sdb7               8:23   0   94M  0 part
+├─sdb8               8:24   0   94M  0 part
+├─sdb9               8:25   0   95M  0 part
+├─sdb10              8:26   0   94M  0 part
+├─sdb11              8:27   0   95M  0 part
+├─sdb12              8:28   0   94M  0 part
+├─sdb13              8:29   0   94M  0 part
+└─sdb14              8:30   0   95M  0 part
+sr0                 11:0    1 1024M  0 rom
+
+
+
+
+
+
+
+[root@server1 ~]# fdisk -l  /dev/sdb
+Disk /dev/sdb: 8 GiB, 8589934592 bytes, 16777216 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x168e2837
+
+Device     Boot   Start      End  Sectors Size Id Type
+/dev/sdb1          2048 16775167 16773120   8G  f W95 Ext'd (LBA)
+/dev/sdb5          4096   194559   190464  93M 82 Linux swap / Solaris
+/dev/sdb6        196608   391167   194560  95M 83 Linux
+/dev/sdb7        393216   585727   192512  94M 83 Linux
+/dev/sdb8        587776   780287   192512  94M 83 Linux
+/dev/sdb9        782336   976895   194560  95M 83 Linux
+/dev/sdb10       978944  1171455   192512  94M 8e Linux LVM
+/dev/sdb11      1173504  1368063   194560  95M 8e Linux LVM
+/dev/sdb12      1370112  1562623   192512  94M 8e Linux LVM
+/dev/sdb13      1564672  1757183   192512  94M fd Linux raid autodetect
+/dev/sdb14      1759232  1953791   194560  95M fd Linux raid autodetect
+
+
+
+dd if=/dev/sda  count=1 bs=512 of=/dev/sdb.mbr ....... backup of MBR
+
+[root@server1 ~]#  dd if=/dev/sda  count=1 bs=512 of=/dev/sdb.mbr
+1+0 records in
+1+0 records out
+512 bytes copied, 0.000129076 s, 4.0 MB/s
+
+
+
+
+[root@server1 ~]# ls -lh /dev/sdb.mbr
+-rw-r--r--. 1 root root 512 Feb 24 21:36 /dev/sdb.mbr
 
 
 
@@ -1016,25 +1152,344 @@ fdisl -l /dev/sdb
 ===============================================================================
 
 
+03_01-General Purpose File Systems with EXT4
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+EXT4 is backward-compatible with its predecessors, EXT2 and EXT3. 
 
+This means that existing EXT2 and EXT3 file systems can be
+upgraded to EXT4 without reformatting.
+
+
+EXT4 supports large file systems and file sizes, allowing for 
+volumes up to 1 exabyte (1 EB) in size and individual
+files up to 16 terabytes (16 TB).
+
+
+
+
+
+sdb                  8:16   0    8G  0 disk
+├─sdb1               8:17   0    1K  0 part
+├─sdb5               8:21   0   93M  0 part
+├─sdb6               8:22   0   95M  0 part
+├─sdb7               8:23   0   94M  0 part
+├─sdb8               8:24   0   94M  0 part
+├─sdb9               8:25   0   95M  0 part
+├─sdb10              8:26   0   94M  0 part
+├─sdb11              8:27   0   95M  0 part
+├─sdb12              8:28   0   94M  0 part
+├─sdb13              8:29   0   94M  0 part
+└─sdb14              8:30   0   95M  0 part
+sr0                 11:0    1 1024M  0 rom
+
+
+
+working in sdb6
+------------------------
+
+[root@server1 ~]# mkfs.ext4 -L DATA /dev/sdb6 .............. fromatting with ext4 in sdb6 of 95M
+mke2fs 1.45.6 (20-Mar-2020)
+Creating filesystem with 97280 1k blocks and 24384 inodes .......inodes
+Filesystem UUID: adc89631-467c-415d-a4e7-a1becfd31337 ...... disk id
+Superblock backups stored on blocks:
+        8193, 24577, 40961, 57345, 73729
+
+Allocating group tables: done
+Writing inode tables: done
+Creating journal (4096 blocks): done
+Writing superblocks and filesystem accounting information: done
+
+
+
+[root@server1 ~]# tune2fs -L MYDATA -c 0 -i 0 /dev/sdb6
+tune2fs 1.45.6 (20-Mar-2020)
+Setting maximal mount count to -1
+Setting interval between checks to 0 seconds
+
+
+
+
+
+
+
+
+
+
+[root@server1 ~]# dumpe2fs /dev/sdb6        ....... taking info of metadata
+dumpe2fs 1.45.6 (20-Mar-2020)
+Filesystem volume name:   MYDATA    ..........volume label
+Last mounted on:          <not available>
+Filesystem UUID:          adc89631-467c-415d-a4e7-a1becfd31337
+Filesystem magic number:  0xEF53
+Filesystem revision #:    1 (dynamic)
+Filesystem features:      has_journal ext_attr resize_inode dir_index filetype extent 64bit flex_bg sparse_super large_file huge_file dir_nlink extra_isize metadata_csum
+Filesystem flags:         signed_directory_hash
+Default mount options:    user_xattr acl
+Filesystem state:         clean
+Errors behavior:          Continue
+Filesystem OS type:       Linux
+Inode count:              24384    ............
+Block count:              97280
+Reserved block count:     4864          Block
+Free blocks:              88549            info tabs
+Free inodes:              24373 
+First block:              1
+Block size:               1024    .............
+Fragment size:            1024
+Group descriptor size:    64
+Reserved GDT blocks:      256
+Blocks per group:         8192
+Fragments per group:      8192
+Inodes per group:         2032
+Inode blocks per group:   254
+Flex block group size:    16
+Filesystem created:       Sat Feb 24 21:40:42 2024
+Last mount time:          n/a
+Last write time:          Sat Feb 24 21:43:27 2024
+Mount count:              0
+Maximum mount count:      -1
+Last checked:             Sat Feb 24 21:40:42 2024
+Check interval:           0 (<none>)
+Lifetime writes:          278 kB
+Reserved blocks uid:      0 (user root)
+Reserved blocks gid:      0 (group root)
+First inode:              11
+Inode size:               128
+Journal inode:            8
+Default directory hash:   half_md4
+Directory Hash Seed:      c3882acc-24ca-4390-b908-5ef332eaeac2
+Journal backup:           inode blocks
+Checksum type:            crc32c
+Checksum:                 0xf6a118c3
+Journal features:         (none)
+Journal size:             4096k
+Journal length:           4096
+Journal sequence:         0x00000001
+Journal start:            0
+
+
+Group 0: (Blocks 1-8192) csum 0xff2f
+  Primary superblock at 1, Group descriptors at 2-2
+  Reserved GDT blocks at 3-258
+  Block bitmap at 259 (+258), csum 0x0ebac842
+  Inode bitmap at 271 (+270), csum 0x56af1615
+  Inode table at 283-536 (+282)
+  4848 free blocks, 2021 free inodes, 2 directories, 2021 unused inodes
+  Free blocks: 3345-8192
+  Free inodes: 12-2032
+Group 1: (Blocks 8193-16384) csum 0xb6fb [INODE_UNINIT, BLOCK_UNINIT]
+  Backup superblock at 8193, Group descriptors at 8194-8194
+  Reserved GDT blocks at 8195-8450
+  Block bitmap at 260 (bg #0 + 259), csum 0x00000000
+  Inode bitmap at 272 (bg #0 + 271), csum 0x00000000
+  Inode table at 537-790 (bg #0 + 536)
+  7934 free blocks, 2032 free inodes, 0 directories, 2032 unused inodes
+  Free blocks: 8451-16384
+  Free inodes: 2033-4064
+Group 2: (Blocks 16385-24576) csum 0xdecb [INODE_UNINIT, BLOCK_UNINIT]
+  Block bitmap at 261 (bg #0 + 260), csum 0x00000000
+  Inode bitmap at 273 (bg #0 + 272), csum 0x00000000
+  Inode table at 791-1044 (bg #0 + 790)
+  8192 free blocks, 2032 free inodes, 0 directories, 2032 unused inodes
+  Free blocks: 16385-24576
+  Free inodes: 4065-6096
+Group 3: (Blocks 24577-32768) csum 0x2313 [INODE_UNINIT, BLOCK_UNINIT]
+  Backup superblock at 24577, Group descriptors at 24578-24578
+  Reserved GDT blocks at 24579-24834
+  Block bitmap at 262 (bg #0 + 261), csum 0x00000000
+  Inode bitmap at 274 (bg #0 + 273), csum 0x00000000
+  Inode table at 1045-1298 (bg #0 + 1044)
+  7934 free blocks, 2032 free inodes, 0 directories, 2032 unused inodes
+  Free blocks: 24835-32768
+  Free inodes: 6097-8128
+Group 4: (Blocks 32769-40960) csum 0xd243 [INODE_UNINIT]
+  Block bitmap at 263 (bg #0 + 262), csum 0x9751dff9
+  Inode bitmap at 275 (bg #0 + 274), csum 0x00000000
+  Inode table at 1299-1552 (bg #0 + 1298)
+  4096 free blocks, 2032 free inodes, 0 directories, 2032 unused inodes
+  Free blocks: 36865-40960
+  Free inodes: 8129-10160
+Group 5: (Blocks 40961-49152) csum 0x4817 [INODE_UNINIT, BLOCK_UNINIT]
+  Backup superblock at 40961, Group descriptors at 40962-40962
+  Reserved GDT blocks at 40963-41218
+  Block bitmap at 264 (bg #0 + 263), csum 0x00000000
+  Inode bitmap at 276 (bg #0 + 275), csum 0x00000000
+  Inode table at 1553-1806 (bg #0 + 1552)
+  7934 free blocks, 2032 free inodes, 0 directories, 2032 unused inodes
+  Free blocks: 41219-49152
+  Free inodes: 10161-12192
+Group 6: (Blocks 49153-57344) csum 0x3ede [INODE_UNINIT, BLOCK_UNINIT]
+  Block bitmap at 265 (bg #0 + 264), csum 0x00000000
+  Inode bitmap at 277 (bg #0 + 276), csum 0x00000000
+  Inode table at 1807-2060 (bg #0 + 1806)
+  8192 free blocks, 2032 free inodes, 0 directories, 2032 unused inodes
+  Free blocks: 49153-57344
+  Free inodes: 12193-14224
+Group 7: (Blocks 57345-65536) csum 0xebc0 [INODE_UNINIT, BLOCK_UNINIT]
+  Backup superblock at 57345, Group descriptors at 57346-57346
+  Reserved GDT blocks at 57347-57602
+  Block bitmap at 266 (bg #0 + 265), csum 0x00000000
+  Inode bitmap at 278 (bg #0 + 277), csum 0x00000000
+  Inode table at 2061-2314 (bg #0 + 2060)
+  7934 free blocks, 2032 free inodes, 0 directories, 2032 unused inodes
+  Free blocks: 57603-65536
+  Free inodes: 14225-16256
+Group 8: (Blocks 65537-73728) csum 0x06c0 [INODE_UNINIT, BLOCK_UNINIT]
+  Block bitmap at 267 (bg #0 + 266), csum 0x00000000
+  Inode bitmap at 279 (bg #0 + 278), csum 0x00000000
+  Inode table at 2315-2568 (bg #0 + 2314)
+  8192 free blocks, 2032 free inodes, 0 directories, 2032 unused inodes
+  Free blocks: 65537-73728
+  Free inodes: 16257-18288
+Group 9: (Blocks 73729-81920) csum 0xfbd4 [INODE_UNINIT, BLOCK_UNINIT]
+  Backup superblock at 73729, Group descriptors at 73730-73730
+  Reserved GDT blocks at 73731-73986
+  Block bitmap at 268 (bg #0 + 267), csum 0x00000000
+  Inode bitmap at 280 (bg #0 + 279), csum 0x00000000
+  Inode table at 2569-2822 (bg #0 + 2568)
+  7934 free blocks, 2032 free inodes, 0 directories, 2032 unused inodes
+  Free blocks: 73987-81920
+  Free inodes: 18289-20320
+Group 10: (Blocks 81921-90112) csum 0x93e4 [INODE_UNINIT, BLOCK_UNINIT]
+  Block bitmap at 269 (bg #0 + 268), csum 0x00000000
+  Inode bitmap at 281 (bg #0 + 280), csum 0x00000000
+  Inode table at 2823-3076 (bg #0 + 2822)
+  8192 free blocks, 2032 free inodes, 0 directories, 2032 unused inodes
+  Free blocks: 81921-90112
+  Free inodes: 20321-22352
+Group 11: (Blocks 90113-97279) csum 0x749e [INODE_UNINIT]
+  Block bitmap at 270 (bg #0 + 269), csum 0x46876e06
+  Inode bitmap at 282 (bg #0 + 281), csum 0x00000000
+  Inode table at 3077-3330 (bg #0 + 3076)
+  7167 free blocks, 2032 free inodes, 0 directories, 2032 unused inodes
+  Free blocks: 90113-97279
+  Free inodes: 22353-24384
+
+
+
+
+
+
+
+
+03_02-Enterprise Class File Systems with XFS
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
+sdb                  8:16   0    8G  0 disk
+├─sdb1               8:17   0    1K  0 part
+├─sdb5               8:21   0   93M  0 part
+├─sdb6               8:22   0   95M  0 part
+├─sdb7               8:23   0   94M  0 part
+├─sdb8               8:24   0   94M  0 part
+├─sdb9               8:25   0   95M  0 part
+├─sdb10              8:26   0   94M  0 part
+├─sdb11              8:27   0   95M  0 part
+├─sdb12              8:28   0   94M  0 part
+├─sdb13              8:29   0   94M  0 part
+└─sdb14              8:30   0   95M  0 part
+sr0                 11:0    1 1024M  0 rom
 
 
 
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+[root@server1 ~]# mkfs.xfs -b size=1k -l size=10m /dev/sdb7 
+meta-data=/dev/sdb7              isize=512    agcount=4, agsize=24064 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1    bigtime=0 inobtcount=0
+data     =                       bsize=1024   blocks=96256, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=1024   blocks=10240, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
 
 
 
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[root@server1 ~]# xfs_db -x /dev/sdb7        ...... viewing metadata
+xfs_db> uuid
+UUID = 84239d30-c957-4593-8b9f-07b94736f680
+xfs_db>
+xfs_db> label
+label = ""
+xfs_db> label DATA2
+writing all SBs
+new label = "DATA2"
+xfs_db> label
+label = "DATA2"
+xfs_db> quit
+
+
+
+
+
+03_03-Using the mount Command and EXT4 File Systems
++++++++++++++++++++++++++++++++++++++++++++++++++++++++ sdb6
+
+[root@server1 ~]# mount /dev/sdb6 /mnt/
+
+[root@server1 ~]# ls /mnt/
+lost+found
+
+
+[root@server1 ~]# umount /mnt
+
+[root@server1 ~]# mount
 
 
 
 
 
 
+spcifiic mount
+-----------------------
+
+[root@server1 ~]# mkdir -p /data/{mydata,mydata2}
+
+[root@server1 ~]# ls -R /data/
+/data/:
+mydata  mydata2
+
+/data/mydata:
+
+/data/mydata2:
+
+
+
+
+
+
+
+
+[root@server1 ~]# mount /dev/sdb6 /data/mydata
+
+
+
+[root@server1 ~]# mount  | grep mydata
+/dev/sdb6 on /data/mydata type ext4 (rw,relatime,seclabel)
+
+
+[root@server1 ~]# mount -o remount,noexec /dev/sdb6 /data/mydata
+
+[root@server1 ~]# mount  | grep mydata
+/dev/sdb6 on /data/mydata type ext4 (rw,noexec,relatime,seclabel)
+
+
+
+[root@server1 ~]# umount /data/mydata
+
+[root@server1 ~]# mount  | grep mydata
+[root@server1 ~]#
+
+[root@server1 ~]# cat /proc/mounts
+
+
+03_04-Using the mount Command and XFS File Systems
++++++++++++++++++++++++++++++++++++++++++++++++++++++++ sdb7
 
 
 
