@@ -131,6 +131,11 @@ Linux storage management is essential for maintaining a reliable and efficient s
 
 
 
+
+
+
+
+
 01_01-Welcome to Storage Management
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -158,6 +163,7 @@ master1
                                     192.168.1.112
 
 
+
 01_02-Listing Block Storage
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -173,15 +179,17 @@ sr0                 11:0    1 1024M  0 rom    -----------------------DVD ROM
 
 
 
+
+
 add disk on server1 == 8G from vm(VMWARE)
 ---------------------------------------
-stop server1 ==> settigs ==> Hard Disk ==> 
-                            add ==> SCSI 
-                                ==> create a virtual disk
-                                ==> max size of disk = 8G
-                                ==> disk file = lfcs2-server2.vmdk
-
-    START MACHINE
+          stop server1 ==> settigs ==> Hard Disk ==> 
+                                      add ==> SCSI 
+                                          ==> create a virtual disk
+                                          ==> max size of disk = 8G
+                                          ==> disk file = lfcs2-server2.vmdk
+          
+              START MACHINE
 
 
 [root@server1 ~]# lsblk
@@ -203,19 +211,801 @@ sr0                 11:0    1 1024M  0 rom
 
 
 
+02_01-Partitioning Linux Disks
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Disk partitions are divisions or sections on a physical hard 
+                disk drive (HDD) or 
+                solid-state drive (SSD) 
 
+that allow you to organize and manage your storage space. 
+
+Partitioning is a crucial aspect of disk management in operating systems, including Linux. 
+
+
+
+                  fdisk
+                  gdisk
+                  parted
+
+
+---------------------------------------------------------
+                    File systems
+                    ext2, ext3, ext4,
+                    reiserFS, XFS, btfrs
+---------------------------------------------------------
+        Logical      | Primary    | Partation
+        Partations   | max 4      | max 128
+---------------------------------------------------------
+    MBR partitiin    | GUID Partition
+    table of 2TB     | table 8 ZB
+---------------------------------------------------------
+                      Hard DISK
+---------------------------------------------------------
+
+
+
+
+Logical Separation:
+----------------------------------
+    Partitions logically divide a single physical disk into separate sections. 
+    Each partition acts as an independent storage unit with its own filesystem.
+
+
+Primary and Extended Partitions:
+----------------------------------
+    A hard disk can have up to four primary partitions or three primary 
+    partitions and one extended partition.
+    An extended partition can be further divided into multiple logical partitions.
+
+
+Partition Table:
+----------------------------------
+    The Master Boot Record (MBR) or GUID Partition Table (GPT) contains 
+    information about the disk's partition layout.
+    MBR is commonly used for BIOS-based systems, while GPT is used for 
+    UEFI-based systems and supports larger disks.
+    
+
+Partitioning Tools:
+----------------------------------
+fdisk: 
+    A command-line tool for partitioning disks on Linux. 
+    It's interactive and provides a text-based interface.
+    
+    fdisk /dev/sdX   # Open fdisk for /dev/sdX
+
+
+parted: 
+    A more modern, interactive, and feature-rich partitioning tool for Linux.
+    
+    parted /dev/sdX   # Open parted for /dev/sdX
+
+
+gparted: 
+    A graphical partition editor that simplifies partition management 
+    with a user-friendly interface.
+    
+    
+    gparted   # Launch the graphical partition editor
+
+
+
+
+
+
+02_02-Using fdisk to Create Partitions
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+[root@server1 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                  8:0    0   30G  0 disk
+├─sda1               8:1    0    1G  0 part /boot
+└─sda2               8:2    0   29G  0 part
+  ├─cs_master-root 253:0    0   26G  0 lvm  /
+  └─cs_master-swap 253:1    0    3G  0 lvm  [SWAP]
+sdb                  8:16   0    8G  0 disk
+sr0                 11:0    1 1024M  0 rom
+
+
+
+[root@server1 ~]# fdisk -l /dev/sdb      ..................old command
+Disk /dev/sdb: 8 GiB, 8589934592 bytes, 16777216 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+
+
+
+
+
+[root@server1 ~]# fdisk /dev/sdb .......... working on new disk 8G
+
+Welcome to fdisk (util-linux 2.32.1).
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+
+Device does not contain a recognized partition table.
+Created a new DOS disklabel with disk identifier 0x54bcf669.
+
+Command (m for help): m
+
+Command (m for help): p
+
+Disk /dev/sdb: 8 GiB, 8589934592 bytes, 16777216 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x54bcf669
+
+
+
+
+Command (m for help): n
+Partition type
+   p   primary (0 primary, 0 extended, 4 free)     ..... 4 primary partions MAX
+   e   extended (container for logical partitions)
+Select (default p):
+
+
+Using default response p.
+Partition number (1-4, default 1):
+First sector (2048-16777215, default 2048):
+Last sector, +sectors or +size{K,M,G,T,P} (2048-16777215, default 16777215): +200M  ........... new 200M created
+
+Created a new partition 1 of type 'Linux' and of size 200 MiB.
+
+
+Command (m for help): p
+
+Disk /dev/sdb: 8 GiB, 8589934592 bytes, 16777216 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x54bcf669
+
+Device     Boot Start    End Sectors  Size Id Type
+/dev/sdb1        2048 411647  409600  200M 83 Linux ........... 200 m of partions created
+
+
+
+
+
+
+Command (m for help): n
+Partition type
+   p   primary (1 primary, 0 extended, 3 free)   ......... 4 of 1 primary used 
+   e   extended (container for logical partitions)
+Select (default p):
+
+Using default response p.
+Partition number (2-4, default 2): .............. default 2 priary is using
+First sector (411648-16777215, default 411648):
+Last sector, +sectors or +size{K,M,G,T,P} (411648-16777215, default 16777215): +300M ................. now again 300m of storate is been sliced
+
+Created a new partition 2 of type 'Linux' and of size 300 MiB.
+
+Command (m for help): p
+Disk /dev/sdb: 8 GiB, 8589934592 bytes, 16777216 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x54bcf669
+
+Device     Boot  Start     End Sectors  Size Id Type
+/dev/sdb1         2048  411647  409600  200M 83 Linux
+/dev/sdb2       411648 1026047  614400  300M 83 Linux ........ new 300m size
+
+
+
+
+
+
+Command (m for help): t
+Partition number (1,2, default 2): 2
+Hex code (type L to list all codes): 82
+
+Changed type of partition 'Linux' to 'Linux swap / Solaris'.
+
+
+
+
+
+Command (m for help): t
+Partition number (1,2, default 2):
+Hex code (type L to list all codes): L  .............. all file types
+
+ 0  Empty           24  NEC DOS         81  Minix / old Lin bf  Solaris
+ 1  FAT12           27  Hidden NTFS Win 
+
+
+CTRL C or Z
+
+
+
+
+
+[root@server1 ~]# fdisk -l /dev/sdb  ................... empty partion table
+Disk /dev/sdb: 8 GiB, 8589934592 bytes, 16777216 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+
+
+
+root@server1 ~]# fdisk /dev/sdb
+Command (m for help): n
+Partition type
+   p   primary (0 primary, 0 extended, 4 free)
+   e   extended (container for logical partitions)
+Select (default p):
+
+Using default response p.
+Partition number (1-4, default 1):
+First sector (2048-16777215, default 2048):
+Last sector, +sectors or +size{K,M,G,T,P} (2048-16777215, default 16777215):
+
+Created a new partition 1 of type 'Linux' and of size 8 GiB.
+
+Command (m for help): p
+Disk /dev/sdb: 8 GiB, 8589934592 bytes, 16777216 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0xd1c413e2
+
+Device     Boot Start      End  Sectors Size Id Type
+/dev/sdb1        2048 16777215 16775168   8G 83 Linux
+
+Command (m for help): w    ........................ dow saving the changes
+The partition table has been altered.
+Calling ioctl() to re-read partition table.
+Syncing disks.
+
+
+
+
+[root@server1 ~]# fdisk -l /dev/sdb
+
+Device     Boot Start      End  Sectors Size Id Type
+/dev/sdb1        2048 16777215 16775168   8G 83 Linux
+
+
+
+[root@server1 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                  8:0    0   30G  0 disk
+├─sda1               8:1    0    1G  0 part /boot
+└─sda2               8:2    0   29G  0 part
+  ├─cs_master-root 253:0    0   26G  0 lvm  /
+  └─cs_master-swap 253:1    0    3G  0 lvm  [SWAP]
+sdb                  8:16   0    8G  0 disk
+└─sdb1               8:17   0    8G  0 part    ........ new partion created of 8G
+sr0                 11:0    1 1024M  0 rom
+
+
+
+
+
+
+dd disk duplicator
+
+[root@server1 ~]# dd if=/dev/zero of=/dev/sdb count=1 bs=512 ..........dd disk duplicator / wiping the disk partations
+1+0 records in
+1+0 records out
+512 bytes copied, 0.000123773 s, 4.1 MB/s
+
+
+
+
+[root@server1 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                  8:0    0   30G  0 disk
+├─sda1               8:1    0    1G  0 part /boot
+└─sda2               8:2    0   29G  0 part
+  ├─cs_master-root 253:0    0   26G  0 lvm  /
+  └─cs_master-swap 253:1    0    3G  0 lvm  [SWAP]
+sdb                  8:16   0    8G  0 disk  ............. sdb1 is wiped out
+sr0                 11:0    1 1024M  0 rom
+
+
+
+[root@server1 ~]# fdisk -l /dev/sdb
+Disk /dev/sdb: 8 GiB, 8589934592 bytes, 16777216 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+
+again sample example for 
+crtearing 600m, 1200m,900m,1g size partions
+------------------------------------------------------------
+
+[root@server1 ~]# fdisk /dev/sdb
+
+Command (m for help): n
+Partition type
+   p   primary (0 primary, 0 extended, 4 free)
+   e   extended (container for logical partitions)
+Select (default p):
+
+Using default response p.
+Partition number (1-4, default 1):
+First sector (2048-16777215, default 2048):
+Last sector, +sectors or +size{K,M,G,T,P} (2048-16777215, default 16777215): +600m
+
+Created a new partition 1 of type 'Linux' and of size 600 MiB.
+
+
+
+
+Command (m for help): n
+Partition type
+   p   primary (1 primary, 0 extended, 3 free)
+   e   extended (container for logical partitions)
+Select (default p):
+
+Using default response p.
+Partition number (2-4, default 2):
+First sector (1230848-16777215, default 1230848):
+Last sector, +sectors or +size{K,M,G,T,P} (1230848-16777215, default 16777215): +1200m
+
+Created a new partition 2 of type 'Linux' and of size 1.2 GiB.
+
+
+
+
+
+
+Command (m for help): n
+Partition type
+   p   primary (2 primary, 0 extended, 2 free)
+   e   extended (container for logical partitions)
+Select (default p):
+
+Using default response p.
+Partition number (3,4, default 3):
+First sector (3688448-16777215, default 3688448):
+Last sector, +sectors or +size{K,M,G,T,P} (3688448-16777215, default 16777215): +900m
+
+Created a new partition 3 of type 'Linux' and of size 900 MiB.
+
+
+
+
+
+
+Command (m for help): n
+Partition type
+   p   primary (3 primary, 0 extended, 1 free)
+   e   extended (container for logical partitions)
+Select (default e):
+
+Using default response e.
+Selected partition 4.
+First sector (5531648-16777215, default 5531648):
+Last sector, +sectors or +size{K,M,G,T,P} (5531648-16777215, default 16777215): +1G
+
+Created a new partition 4 of type 'Extended' and of size 1 GiB.
+
+
+
+
+
+Command (m for help): p
+
+Disk /dev/sdb: 8 GiB, 8589934592 bytes, 16777216 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0xaa1b3bd0
+
+Device     Boot   Start     End Sectors  Size Id Type
+/dev/sdb1          2048 1230847 1228800  600M 83 Linux  ...600m created
+/dev/sdb2       1230848 3688447 2457600  1.2G 83 Linux  ....1200m created
+/dev/sdb3       3688448 5531647 1843200  900M 83 Linux  .... 900m too
+/dev/sdb4       5531648 7628799 2097152    1G  5 Extended  ....1g too
+
+
+
+
+Command (m for help): w        ................saving the changes
+The partition table has been altered.
+Calling ioctl() to re-read partition table.
+Syncing disks.
+
+
+
+
+
+
+[root@server1 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                  8:0    0   30G  0 disk
+├─sda1               8:1    0    1G  0 part /boot
+└─sda2               8:2    0   29G  0 part
+  ├─cs_master-root 253:0    0   26G  0 lvm  /
+  └─cs_master-swap 253:1    0    3G  0 lvm  [SWAP]
+sdb                  8:16   0    8G  0 disk
+├─sdb1               8:17   0  600M  0 part  ...... new +600m and like wise in sdb
+├─sdb2               8:18   0  1.2G  0 part
+├─sdb3               8:19   0  900M  0 part
+└─sdb4               8:20   0    1K  0 part
+sr0                 11:0    1 1024M  0 rom
+
+
+
+
+
+[root@server1 ~]# fdisk -l /dev/sdb
+Disk /dev/sdb: 8 GiB, 8589934592 bytes, 16777216 sectors
+
+Device     Boot   Start     End Sectors  Size Id Type
+/dev/sdb1          2048 1230847 1228800  600M 83 Linux
+/dev/sdb2       1230848 3688447 2457600  1.2G 83 Linux
+/dev/sdb3       3688448 5531647 1843200  900M 83 Linux
+/dev/sdb4       5531648 7628799 2097152    1G  5 Extended
+
+
+
+
+wiping disk data 
+---------------
+
+[root@server1 ~]# dd if=/dev/zero of=/dev/sdb count=1 bs=512
+1+0 records in
+1+0 records out
+512 bytes copied, 0.000125273 s, 4.1 MB/s
+
+
+[root@server1 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                  8:0    0   30G  0 disk
+├─sda1               8:1    0    1G  0 part /boot
+└─sda2               8:2    0   29G  0 part
+  ├─cs_master-root 253:0    0   26G  0 lvm  /
+  └─cs_master-swap 253:1    0    3G  0 lvm  [SWAP]
+sdb                  8:16   0    8G  0 disk  .........................LOL
+sr0                 11:0    1 1024M  0 rom
+
+
+
+
+
+
+
+
+
+
+02_03-Using gdisk to Create Partitions and Restore Partitions
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+[root@server1 ~]# gdisk  /dev/sdb
+GPT fdisk (gdisk) version 1.0.3
+
+Warning: Partition table header claims that the size of partition table
+entries is 0 bytes, but this program  supports only 128-byte entries.
+Adjusting accordingly, but partition table may be garbage.
+Warning: Partition table header claims that the size of partition table
+entries is 0 bytes, but this program  supports only 128-byte entries.
+Adjusting accordingly, but partition table may be garbage.
+Partition table scan:
+  MBR: not present
+  BSD: not present
+  APM: not present
+  GPT: not present
+
+Creating new GPT entries.
+
+Command (? for help):
+
+
+
+
+
+Command (? for help): n
+Partition number (1-128, default 1): ....................... handle 128 parataions more than ...fdsik
+First sector (34-16777182, default = 2048) or {+-}size{KMGTP}:
+Last sector (2048-16777182, default = 16777182) or {+-}size{KMGTP}: +200M   .......... first 200m of partion creted
+Current type is 'Linux filesystem'
+Hex code or GUID (L to show codes, Enter = 8300):
+Changed type of partition to 'Linux filesystem'
+
+Command (? for help): p
+Disk /dev/sdb: 16777216 sectors, 8.0 GiB
+Model: VMware Virtual S
+Sector size (logical/physical): 512/512 bytes
+Disk identifier (GUID): 279930C8-5AEC-43E7-9A8E-360698FBA1E0
+Partition table holds up to 128 entries
+Main partition table begins at sector 2 and ends at sector 33
+First usable sector is 34, last usable sector is 16777182
+Partitions will be aligned on 2048-sector boundaries
+Total free space is 16367549 sectors (7.8 GiB)
+
+Number  Start (sector)    End (sector)  Size       Code  Name
+   1            2048          411647   200.0 MiB   8300  Linux filesystem
+
+
+
+
+
+
+
+Command (? for help): n
+Partition number (2-128, default 2):
+First sector (34-16777182, default = 411648) or {+-}size{KMGTP}:
+Last sector (411648-16777182, default = 16777182) or {+-}size{KMGTP}: +700M .... next 700m
+Current type is 'Linux filesystem'
+Hex code or GUID (L to show codes, Enter = 8300): 8200 ................. for swap partions
+Changed type of partition to 'Linux swap'
+
+Command (? for help): p
+Disk /dev/sdb: 16777216 sectors, 8.0 GiB
+Model: VMware Virtual S
+Sector size (logical/physical): 512/512 bytes
+Disk identifier (GUID): 279930C8-5AEC-43E7-9A8E-360698FBA1E0
+Partition table holds up to 128 entries
+Main partition table begins at sector 2 and ends at sector 33
+First usable sector is 34, last usable sector is 16777182
+Partitions will be aligned on 2048-sector boundaries
+Total free space is 14933949 sectors (7.1 GiB)
+
+Number  Start (sector)    End (sector)  Size       Code  Name
+   1            2048          411647   200.0 MiB   8300  Linux filesystem
+   2          411648         1845247   700.0 MiB   8200  Linux swap  ...... 700m o swap partions
+
+
+
+
+
+Command (? for help): w
+
+Final checks complete. About to write GPT data. THIS WILL OVERWRITE EXISTING
+PARTITIONS!!
+
+Do you want to proceed? (Y/N): Y
+OK; writing new GUID partition table (GPT) to /dev/sdb.
+The operation has completed successfully.
+
+
+
+
+[root@server1 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sdb                  8:16   0    8G  0 disk
+├─sdb1               8:17   0  200M  0 part
+└─sdb2               8:18   0  700M  0 part
+
+
+
+
+
+[root@server1 ~]# gdisk -l /dev/sdb
+Total free space is 14933949 sectors (7.1 GiB)
+
+Number  Start (sector)    End (sector)  Size       Code  Name
+   1            2048          411647   200.0 MiB   8300  Linux filesystem
+   2          411648         1845247   700.0 MiB   8200  Linux swap
+
+
+
+
+wiping disk 
+-----------
+[root@server1 ~]# dd if=/dev/zero of=/dev/sdb count=2 bs=16K
+2+0 records in
+2+0 records out
+32768 bytes (33 kB, 32 KiB) copied, 0.00016189 s, 202 MB/s
+
+
+
+
+[root@server1 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                  8:0    0   30G  0 disk
+sdb                  8:16   0    8G  0 disk
+sr0                 11:0    1 1024M  0 rom
+
+
+
+
+[root@server1 ~]# gdisk -l /dev/sdb
+
+
+taking backup of last parted disk
+--------------------------------------
+
+[root@server1 ~]# gdisk -l /dev/sdb
+
+Found invalid MBR and corrupt GPT. What do you want to do? (Using the
+GPT MAY permit recovery of GPT data.)
+ 1 - Use current GPT
+ 2 - Create blank GPT
+
+Your answer: 1
+Disk /dev/sdb: 16777216 sectors, 8.0 GiB
+Model: VMware Virtual S
+Sector size (logical/physical): 512/512 bytes
+Disk identifier (GUID): 279930C8-5AEC-43E7-9A8E-360698FBA1E0
+Partition table holds up to 128 entries
+Main partition table begins at sector 2 and ends at sector 33
+First usable sector is 34, last usable sector is 16777182
+Partitions will be aligned on 2048-sector boundaries
+Total free space is 14933949 sectors (7.1 GiB)
+
+Number  Start (sector)    End (sector)  Size       Code  Name
+   1            2048          411647   200.0 MiB   8300  Linux filesystem ............ backup restored of parted disk
+   2          411648         1845247   700.0 MiB   8200  Linux swap
+
+
+
+
+
+
+
+
+[root@server1 ~]# dd if=/dev/zero of=/dev/sdb  bs=16K
+
+
+
+
+
+
+02_04-Using GNU Parted to Create Partitions
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+[root@server1 ~]# parted /dev/sdb print
+Error: /dev/sdb: unrecognised disk label
+Model: VMware, VMware Virtual S (scsi)
+Disk /dev/sdb: 8590MB
+Sector size (logical/physical): 512B/512B
+Partition Table: unknown
+Disk Flags:
+
+
+
+
+[root@server1 ~]# parted /dev/sdb  .............. goint to disk sdb
+GNU Parted 3.2
+Using /dev/sdb
+Welcome to GNU Parted! Type 'help' to view a list of commands.
+(parted) print  ................................. make print info
+Error: /dev/sdb: unrecognised disk label
+Model: VMware, VMware Virtual S (scsi)
+Disk /dev/sdb: 8590MB
+Sector size (logical/physical): 512B/512B
+Partition Table: unknown
+Disk Flags:
+(parted)
+
+
+
+
+
+(parted) mklabel msdos  .............. making label msdor aor any
+(parted) print
+Model: VMware, VMware Virtual S (scsi)
+Disk /dev/sdb: 8590MB
+Sector size (logical/physical): 512B/512B
+Partition Table: msdos  .................changes reflect here
+Disk Flags:
+
+
+
+
+(parted) mklabel gpt    .............. making GPT type
+Warning: The existing disk label on /dev/sdb will be destroyed and all data on this
+disk will be lost. Do you want to continue?
+Yes/No? y        ....................... confirmation yes
+(parted) print
+Model: VMware, VMware Virtual S (scsi)
+Disk /dev/sdb: 8590MB
+Sector size (logical/physical): 512B/512B
+Partition Table: gpt    ................. changes of GPT reflect here
+
+
+
+
+(parted) mklabel msdos
+Yes/No? y
+(parted) print
+Partition Table: msdos
+
+
+
+(parted) mkpart primary 1 200
+(parted) print
+Number  Start   End    Size   Type     File system  Flags
+ 1      1049kB  200MB  199MB  primary               lba
+
+
+
+
+(parted) mkpart extended 201 -1    ................. 201m to entire last sector (-1)
+(parted) print
+Number  Start   End     Size    Type      File system  Flags
+ 1      1049kB  200MB   199MB   primary                lba
+ 2      201MB   8589MB  8388MB  extended               lba
+
+
+
+
+(parted) mkpart logical 202 300
+(parted) print
+Partition Table: msdos
+Number  Start   End     Size    Type      File system  Flags
+ 1      1049kB  200MB   199MB   primary                lba
+ 2      201MB   8589MB  8388MB  extended               lba
+ 5      202MB   300MB   97.5MB  logical                lba  ... logical goes number 5 coz ( partion number 1 2 3 4 are reserved for primary) and parted can do only MAX 15 partins , next HD ll be needed
+
+
+
+
+
+(parted) quit
+Information: You may need to update /etc/fstab.
+
+
+
+
+[root@server1 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sdb                  8:16   0    8G  0 disk
+├─sdb1               8:17   0  190M  0 part  .... partion number goes from 16,17,18 ... check , goes upto 32 for isci
+├─sdb2               8:18   0    1K  0 part
+└─sdb5               8:21   0   93M  0 part
+sr0                 11:0    1 1024M  0 rom
+
+
+
+[root@server1 ~]# dd if=/dev/zero of=/dev/sdb count=1 bs=512
+1+0 records in
+1+0 records out
+
+
+[root@server1 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                  8:0    0   30G  0 disk
+├─sda1               8:1    0    1G  0 part /boot
+sdb                  8:16   0    8G  0 disk
+sr0                 11:0    1 1024M  0 rom
+
+
+
+
+
+
+
+
+
+02_05-Scripting Partition Creation
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 
 
 
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+:wq
 
+chmod +x part.sh
+./part.sh
 
+lsblk
+fdisl -l /dev/sdb
 
+ dd if=/dev/sda  count=1 bs=512 of=/dev/sdb.mbr ....... backup of MBR
 
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 
