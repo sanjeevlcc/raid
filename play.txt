@@ -102,6 +102,8 @@ Disk Quotas:
     limiting user or group storage usage.
 
 
+
+
 Backup and Restore:
 ---------------------------
       tar, rsync, dd:
@@ -112,11 +114,16 @@ Backup and Restore:
           Regular backups are crucial for data 
           protection and recovery in case of data loss.
 
+
+
+
 Disk Encryption:
 ---------------------------
       dm-crypt / LUKS:
           Linux provides tools like dm-crypt and LUKS 
           for disk encryption to enhance data security.
+
+
 
 
 Advanced Filesystems:
@@ -127,7 +134,12 @@ Advanced Filesystems:
 
 
 
-Linux storage management is essential for maintaining a reliable and efficient storage infrastructure. Administrators should be familiar with these tools and concepts to optimize storage resources and ensure data integrity.
+Linux storage management is essential for maintaining a 
+reliable and efficient storage infrastructure.
+
+
+Administrators should be familiar with these tools and concepts 
+to optimize storage resources and ensure data integrity.
 
 
 
@@ -141,7 +153,26 @@ Linux storage management is essential for maintaining a reliable and efficient s
 
                         ................
                         CENTOS7 Master .  =============> centos7 server1
-                        ................  =============> centos7 server1
+                        ................  =============> centos7 server2
+
+
+                    +-----------------------+    
+                    |      Master Node      |
+                    |  CentOS Machine 1     |
+                    |                       |
+                    +-----------------------+
+                              ||
+                              ||
+              -----------------------------------
+               |                               |
+               v                               v
+      +-----------------------+      +-----------------------+
+      |      Server Node 1    |      |      Server Node 2    |
+      |  CentOS Machine 2     |      |  CentOS Machine 3     |
+      |                       |      |                       |
+      +-----------------------+      +-----------------------+
+
+
 
 
 
