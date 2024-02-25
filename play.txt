@@ -5,6 +5,132 @@
 ===============================================================================
 
 
+Linux storage management refers to the set of processes, tools, and techniques used to manage and control storage resources on Linux-based systems. 
+
+                    This includes managing 
+                    disk partitions, 
+                    filesystems, 
+                    logical volumes, 
+                    RAID configurations, 
+                    and other storage-related aspects. 
+
+Effective storage management is crucial for optimizing performance, ensuring data integrity, and maximizing storage utilization. Here are key components of Linux storage management:
+
+
+Disk Partitions:
+---------------------------
+          Partitioning Tools:
+              Linux provides utilities like fdisk, parted, and gparted 
+              for creating, modifying, and deleting disk partitions.
+          
+          
+          Partition Types:
+              Primary, extended, and logical partitions.
+
+
+Filesystems:
+---------------------------
+            Filesystem Creation:
+            Utilities like mkfs or mkfs.<filesystem> are used to 
+            create filesystems on partitions.
+            
+            Filesystem Mounting:
+            The mount command is used to attach a 
+            filesystem to a specified mount point.
+            
+            Filesystem Types:
+            Common Linux filesystems i
+            nclude ext4, XFS, Btrfs, and others.
+            
+
+
+
+Logical Volume Management (LVM):
+---------------------------
+              LVM Components:
+              Physical Volumes (PV), Volume Groups (VG), 
+              and Logical Volumes (LV).
+              
+              
+              Dynamic Storage Allocation:
+              LVM allows for dynamic resizing of logical
+              volumes and volume groups, providing 
+              flexibility in storage management.
+
+
+
+RAID (Redundant Array of Independent Disks):
+------------------------------------------------------
+              Software RAID:
+              Linux supports software RAID 
+              configurations using tools like mdadm. 
+              RAID levels include 0 (striping), 1 (mirroring), 
+              5 (striping with parity), and others.
+              
+              Hardware RAID:
+              Some systems utilize hardware RAID controllers 
+              for improved performance and reliability.
+
+
+
+Swap Space Management:
+---------------------------
+    swapon / swapoff:
+        The swapon and swapoff commands are used 
+        to activate and deactivate swap space.
+       
+
+
+Monitoring and Reporting:
+---------------------------
+      df:
+            Displays information about disk space usage on mounted filesystems.
+      du:
+            Estimates file space usage for directories.
+      
+      
+      iostat, sar, vmstat:
+            Monitoring tools for tracking system I/O, CPU, and memory statistics.
+      
+
+
+
+Disk Quotas:
+---------------------------
+    Quotacheck / Quotaon:
+    Tools to enable and check disk quotas, 
+    limiting user or group storage usage.
+
+
+Backup and Restore:
+---------------------------
+      tar, rsync, dd:
+          Tools for creating backups, 
+          copying data, and performing disk cloning.
+      
+      Backup Strategies:
+          Regular backups are crucial for data 
+          protection and recovery in case of data loss.
+
+Disk Encryption:
+---------------------------
+      dm-crypt / LUKS:
+          Linux provides tools like dm-crypt and LUKS 
+          for disk encryption to enhance data security.
+
+
+Advanced Filesystems:
+  ---------------------------      
+        Btrfs, ZFS:
+            Advanced filesystems with features such as 
+            snapshotting, copy-on-write, and data integrity checks.
+
+
+
+Linux storage management is essential for maintaining a reliable and efficient storage infrastructure. Administrators should be familiar with these tools and concepts to optimize storage resources and ensure data integrity.
+
+
+
 01_01-Welcome to Storage Management
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -14,17 +140,59 @@
 
 
 
+[root@master1 ~]# hostname
+master1
+[root@master1 ~]# hostname -I
+192.168.1.110
+
+
+                  [root@server1 ~]# hostname
+                  server1
+                  [root@server1 ~]# hostname -I
+                  192.168.1.111
+
+
+                                    [root@server2 ~]# hostname
+                                    server2
+                                    [root@server2 ~]# hostname -I
+                                    192.168.1.112
+
 
 01_02-Listing Block Storage
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-lsblk
- 
-add disk on server1 == 8G from vm
+[root@server1 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                  8:0    0   30G  0 disk     ------------------whole block disk size of 30G
+├─sda1               8:1    0    1G  0 part /boot
+└─sda2               8:2    0   29G  0 part
+  ├─cs_master-root 253:0    0   26G  0 lvm  /
+  └─cs_master-swap 253:1    0    3G  0 lvm  [SWAP]
+sr0                 11:0    1 1024M  0 rom    -----------------------DVD ROM
 
 
 
 
+add disk on server1 == 8G from vm(VMWARE)
+---------------------------------------
+stop server1 ==> settigs ==> Hard Disk ==> 
+                            add ==> SCSI 
+                                ==> create a virtual disk
+                                ==> max size of disk = 8G
+                                ==> disk file = lfcs2-server2.vmdk
+
+    START MACHINE
+
+
+[root@server1 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                  8:0    0   30G  0 disk
+├─sda1               8:1    0    1G  0 part /boot
+└─sda2               8:2    0   29G  0 part
+  ├─cs_master-root 253:0    0   26G  0 lvm  /
+  └─cs_master-swap 253:1    0    3G  0 lvm  [SWAP]
+sdb                  8:16   0    8G  0 disk    ............. new disk added of 8GB
+sr0                 11:0    1 1024M  0 rom
 
 
 
