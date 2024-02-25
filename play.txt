@@ -1488,8 +1488,135 @@ mydata  mydata2
 [root@server1 ~]# cat /proc/mounts
 
 
+
+permenant mount
+----------------------
+
+[root@server1 ~]# blkid  /dev/sdb6
+/dev/sdb6: LABEL="MYDATA" UUID="adc89631-467c-415d-a4e7-a1becfd31337" BLOCK_SIZE="1024" TYPE="ext4" PARTUUID="168e2837-06"
+
+
+[root@server1 ~]# vi /etc/fstab
+  UUID="adc89631-467c-415d-a4e7-a1becfd31337"             /data/mydata    ext4 noexec     0 2
+~
+:wq
+
+
+[root@server1 ~]# mount -a
+
+
+[root@server1 ~]# mount  | grep mydata
+/dev/sdb6 on /data/mydata type ext4 (rw,noexec,relatime,seclabel)
+
+
+
+
+
+
+
+
+
+
+
 03_04-Using the mount Command and XFS File Systems
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++ sdb7
+
+
+[root@server1 mydata]# blkid  /dev/sdb7
+/dev/sdb7: LABEL="DATA2" UUID="84239d30-c957-4593-8b9f-07b94736f680" BLOCK_SIZE="512" TYPE="xfs" PARTUUID="168e2837-07"
+
+
+
+
+[root@server1 ~]# vi /etc/fstab
+/dev/sdb7       /data/mydata2   xfs defaults    0 0
+
+
+
+[root@server1 ~]# mount -a
+[root@server1 ~]#
+
+
+
+[root@server1 ~]# mount  | grep mydata2
+/dev/sdb7 on /data/mydata2 type xfs (rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=32k,noquota)
+
+
+
+
+[root@server1 ~]# cd /data/mydata2/
+[root@server1 mydata2]# touch file1
+[root@server1 mydata2]# ls file1
+file1
+
+
+
+
+
+
+
+
+
+
+
+
+[root@server1 mydata2]# xfs_info  /dev/sdb7  ............ checking metadata 
+meta-data=/dev/sdb7              isize=512    agcount=4, agsize=24064 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1    bigtime=0 inobtcount=0
+data     =                       bsize=1024   blocks=96256, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=1024   blocks=10240, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+
+
+
+
+
+
+
+
+
+
+
+03_05-Mount Options
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+
+[root@server1 ~]# man mount
+
+    /INDEPENDENT
+
+                      atime
+                      noatime
+                      
+                      auto
+                      noauto
+                      
+                      dev
+                      nodev
+                      
+                      exec
+                      noexec
+
+
+                        diratime
+
+
+
+      /FILESYSTEM-SPECIFIC MOUNT OPTIONS
+      
+      
+      /ext4
+      
+      /xfs
 
 
 
