@@ -1620,10 +1620,509 @@ realtime =none                   extsz=4096   blocks=0, rtextents=0
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 ===============================================================================
 04. Managing Swap and RAID Devices
 ===============================================================================
 
+Swap space in Linux is a designated area on a storage 
+device (usually a hard disk drive or a solid-state drive) that the
+operating system uses as virtual memory. 
+
+It serves as an extension of the system's physical memory (RAM) and 
+provides additional space for storing data when the RAM is fully utilized. 
+
+The primary purpose of swap space is to support the system's memory 
+management and prevent the system from running out of memory.
+
+
+
+
+
+Here are key aspects of swap space in Linux:
+------------------------------------------------
+
+Memory Extension:
+--------------------------------
+      When the physical RAM is exhausted and the system needs more 
+      memory to store data, it transfers less frequently accessed or idle 
+      portions of the memory to the swap space. 
+      This allows the system to free up RAM for actively used processes.
+
+
+
+Swap Devices:
+--------------------------------
+      Swap space can exist on dedicated partitions, swap files, or a 
+      combination of both. Dedicated swap partitions are common, but swap 
+      files provide more flexibility.
+
+
+
+Swap Partition:
+--------------------------------
+      A dedicated partition on a storage device that is specifically 
+      designated for use as swap space. It is created during the
+      disk partitioning process.
+      
+
+Swap File:
+--------------------------------
+      A regular file on an existing filesystem that is used as swap space. 
+      This provides a more flexible approach as it can be created, resized,
+      or removed without modifying disk partitions.
+
+
+Swapiness:
+--------------------------------
+      A kernel parameter that determines how aggressively the Linux
+      kernel uses swap space. 
+      
+      The swappiness value ranges from 0 to 100, where lower 
+      values (e.g., 10) result in less swapping and 
+      higher values (e.g., 60) result in more swapping.
+
+
+Emergency Storage:
+--------------------------------
+      Swap space acts as a safety net when the system is under heavy 
+      load or when memory demands spike unexpectedly. 
+      It allows the system to continue running by using disk space
+      as a temporary memory extension.
+
+
+Performance Impact:
+--------------------------------
+      While swap space prevents out-of-memory errors, excessive swapping 
+      to disk can impact system performance because accessing data from
+      disk is slower than accessing it from RAM.
+
+
+Monitoring and Management:
+--------------------------------
+      System administrators can monitor swap space usage using tools 
+      like free, top, or htop. 
+      Proper management involves adjusting swappiness, adding or removing 
+      swap space based on system requirements, and ensuring that swap
+      space is properly configured to handle workload variations.
+
+
+Hibernate and Suspend:
+--------------------------------
+      Swap space is often used for hibernation and suspend-to-disk 
+      functionalities. 
+      When a system is hibernated, the contents of the RAM are 
+      saved to the swap space, allowing the system to resume its previous
+      state upon reboot.
+
+
+
+  To summarize, swap space in Linux is a crucial component of the
+  virtual memory system, providing additional storage for data when
+  the physical RAM is insufficient. 
+  
+  Properly configuring and managing swap space is important for
+  ensuring optimal system performance and responsiveness.
+
+
+
+
+04_01-Creating SWAP Space
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+[root@server1 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sdb                  8:16   0    8G  0 disk
+├─sdb1               8:17   0    1K  0 part
+├─sdb5               8:21   0   93M  0 part
+├─sdb6               8:22   0   95M  0 part /data/mydata
+├─sdb7               8:23   0   94M  0 part /data/mydata2
+├─sdb8               8:24   0   94M  0 part
+
+sr0                 11:0    1 1024M  0 rom
+
+
+
+[root@server1 ~]# fdisk -l  /dev/sdb
+
+Device     Boot   Start      End  Sectors Size Id Type
+/dev/sdb1          2048 16775167 16773120   8G  f W95 Ext'd (LBA)
+/dev/sdb5          4096   194559   190464  93M 82 Linux swap / Solaris ................ swap space created from script
+/dev/sdb6        196608   391167   194560  95M 83 Linux
+/dev/sdb7        393216   585727   192512  94M 83 Linux
+
+
+
+
+
+
+[root@server1 ~]# mkswap /dev/sdb5
+Setting up swapspace version 1, size = 93 MiB (97513472 bytes)
+no label, UUID=29aa3148-d25b-4a9b-8610-0eb9b2da8596
+
+
+
+
+[root@server1 ~]# swapon -s
+Filename                                Type            Size    Used    Priority
+/dev/dm-1                               partition       3145724 0       -2    ...................... low priority
+
+
+
+
+[root@server1 ~]# swapon /dev/sdb5
+[root@server1 ~]# swapon -s
+Filename                                Type            Size    Used    Priority
+/dev/dm-1                               partition       3145724 0       -2  ................... priority => -1 HIGH , -5 LOW
+/dev/sdb5                               partition       95228   0       -3
+[root@server1 ~]#
+
+
+
+
+
+
+[root@server1 ~]# swapoff /dev/sdb5
+
+[root@server1 ~]# swapon -s
+Filename                                Type            Size    Used    Priority
+/dev/dm-1 
+
+
+
+
+
+
+[root@server1 ~]# swapon /dev/sdb5
+
+[root@server1 ~]# swapon -s
+Filename                                Type            Size    Used    Priority
+/dev/dm-1                               partition       3145724 0       -2
+/dev/sdb5                               partition       95228   0       -3
+
+[root@server1 ~]# free -m
+              total        used        free      shared  buff/cache   available
+Mem:           1612         246        1095           8         269        1207
+Swap:          3164           0        3164
+[root@server1 ~]#
+
+
+
+
+
+
+04_02-Setting the SWAP Priority
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+[root@server1 ~]# swapoff  -a
+
+
+[root@server1 ~]# free -m
+              total        used        free      shared  buff/cache   available
+Mem:           1612         244        1098           8         269        1209
+Swap:             0           0           0
+
+
+[root@server1 ~]# swapon  -s
+
+
+[root@server1 ~]# free -m
+              total        used        free      shared  buff/cache   available
+Mem:           1612         246        1095           8         269        1207
+Swap:          3071           0        3071
+
+
+
+permenant persistance of swap
+--------------------------------
+
+[root@server1 ~]# vi /etc/fstab
+
+:r!blkid /dev/sdb5    ................. running command inside vim
+
+UUID="29aa3148-d25b-4a9b-8610-0eb9b2da8596"     swap    swap    sw,pri=5        0 0
+
+
+                :wq
+
+
+
+
+[root@server1 ~]# swapon -a        .................. a for activation
+[root@server1 ~]# swapon -s        ................... s for summary
+Filename                                Type            Size    Used    Priority
+/dev/dm-1                               partition       3145724 0       -2
+/dev/sdb5                               partition       95228   0       5    .......... priority on 5
+
+
+
+
+
+
+
+04_03-Configuring Software RAID
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+        Software RAID (Redundant Array of Independent Disks) is a 
+        storage technology that allows multiple physical disk drives 
+        to be combined into a single logical unit for the purposes of 
+        data redundancy, performance improvement, or both.
+
+
+Levels of Software RAID:
+-------------------------
+          Software RAID supports different RAID levels, including 
+                    RAID 0 (striping), 
+                    RAID 1 (mirroring), 
+                    RAID 5 (striping with parity), 
+                    RAID 6 (striping with double parity), 
+          
+          and more. 
+          
+          The specific RAID level chosen depends on the desired balance
+          between performance and data redundancy.
+
+
+
+        On Linux systems, the 
+                  mdadm (Multiple Device Admin) 
+        utility is commonly used to 
+        create, manage, and monitor software RAID configurations
+
+
+
+Before RAID Configuration:
+    Two separate disks (Disk A and Disk B).
+
+                        Disk A         Disk B
+                        |             |
+                        |             |
+                        |             |
+
+
+Create RAID 1 Configuration:
+    RAID 1 involves mirroring, so data is 
+    duplicated on both disks for redundancy.
+
+                        Disk A         Disk B
+                        |             |
+                        |    RAID 1   |
+                        |    Mirror   |
+                        |             |
+
+
+
+
+
+RAID 1 Operation:
+    In RAID 1, if data is written to Disk A, it 
+    is also simultaneously written to Disk B
+    to ensure redundancy.
+
+                      Disk A         Disk B
+                      |   Write     |   Write
+                      |    RAID 1   |    RAID 1
+                      |    Mirror   |    Mirror
+                      |             |
+
+
+
+
+[root@server1 ~]# fdisk -l /dev/sdb
+
+/dev/sdb13      1564672  1757183   192512  94M fd Linux raid autodetect
+/dev/sdb14      1759232  1953791   194560  95M fd Linux raid autodetect
+
+                        /dev/sdb13      ......... on same device /dev/sdb partions is not good 
+                        /dev/sdb14       ......... problem of fauld tolerence, add extra physical disk to it
+  
+
+
+
+[root@server1 ~]# cat /proc/mdstat    ......... no raid devices configured
+Personalities :
+unused devices: <none>
+
+
+conf of RAID-1 in sdb13 and 14, with 2 devices
+--------------------------------------------
+
+[root@server1 ~]# mdadm --create --verbose /dev/md0 --level=mirror --raid-devices=2 /dev/sdb13 /dev/sdb14      
+mdadm: Note: this array has metadata at the start and
+    may not be suitable as a boot device.  If you plan to
+    store '/boot' on this device please ensure that
+    your boot-loader understands md/v1.x metadata, or use
+    --metadata=0.90
+mdadm: size set to 95232K
+mdadm: largest drive (/dev/sdb14) exceeds size (95232K) by more than 1%
+Continue creating array? y    ............................................................... give yes confirmations
+mdadm: Defaulting to version 1.2 metadata
+mdadm: array /dev/md0 started.
+
+
+
+
+
+
+
+
+
+
+[root@server1 ~]# ls -l /dev/md0
+brw-rw----. 1 root disk 9, 0 Feb 25 06:35 /dev/md0    .............. blovk device created
+
+
+
+[root@server1 ~]# cat /proc/mdstat
+Personalities : [raid1]
+md0 : active raid1 sdb14[1] sdb13[0]  ....................... raid1 created with sdb13 n 14
+      95232 blocks super 1.2 [2/2] [UU]
+
+unused devices: <none>
+
+
+
+
+
+
+[root@server1 ~]# lsmod  | grep raid
+raid1                  53248  1
+
+
+
+
+[root@server1 ~]# mkfs.xfs /dev/md0  ................ creating block device md0 of raid1 in xfs file system
+
+
+
+
+[root@server1 ~]# mdadm --detail --scan    ...... listing the raid setup or array is setup 
+ARRAY /dev/md0 metadata=1.2 name=server1:0 UUID=0f32750b:9a135de3:df63ebf3:ff9657d4
+
+
+
+
+[root@server1 ~]# mdadm --detail --scan >> /etc/mdadm.conf    ...... send conf file in /etc of RAID
+
+
+
+[root@server1 ~]# mdadm --stop /dev/md0      ............ sttoping raid md0 block storage
+mdadm: stopped /dev/md0
+
+
+
+[root@server1 ~]# mdadm --assemble --scan
+
+
+
+
+
+
+
+
+
+
+
+
+
+===============================================================================
+05. Extending Permissions with ACLS
+===============================================================================
+
+
+
+
+
+
+05_01-Introducing ACLs in Linux
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+05_02-ACL Support within the Kernel and Filesystems
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+05_03-Listing Filesystem ACLs
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+05_04-Setting Default ACLS
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+05_05-Adding ACL Entries
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+05_06-Removing ACLS
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+05_07-Diagnosing and Resolving Security Issues
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+
+
+
+
+===============================================================================
+
+===============================================================================
+
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+===============================================================================
+
+===============================================================================
+
+
+
+
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -1641,8 +2140,51 @@ realtime =none                   extsz=4096   blocks=0, rtextents=0
 
 
 
+===============================================================================
+
+===============================================================================
 
 
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+===============================================================================
+
+===============================================================================
+
+
+
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 
@@ -1674,8 +2216,21 @@ realtime =none                   extsz=4096   blocks=0, rtextents=0
 
 
 
+===============================================================================
+
+===============================================================================
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 ===============================================================================
@@ -1683,9 +2238,6 @@ realtime =none                   extsz=4096   blocks=0, rtextents=0
 ===============================================================================
 
 
-
-
-
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -1698,119 +2250,6 @@ realtime =none                   extsz=4096   blocks=0, rtextents=0
 
 
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-===============================================================================
-
-===============================================================================
-
-
-
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-
-===============================================================================
-
-===============================================================================
-
-
-
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-===============================================================================
-
-===============================================================================
-
-
-
-
-
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-
-
-===============================================================================
-
-===============================================================================
-
-
-
-
-
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-
-===============================================================================
-
-===============================================================================
-
-
-===============================================================================
-
-===============================================================================
-
-
 
 
 
