@@ -2861,6 +2861,32 @@ file or directory to be created
 
 
 
+copying file to lvm space 
+-------------------------------------
+[root@server1 ~]# find /usr/share/doc/ -name '*.pdf' -exec cp {} /my-lvm/ \;
+
+[root@server1 ~]# ls /my-lvm/
+dir1  file1  pigz.pdf
+
+
+
+
+
+checking size of space
+-----------------------
+[root@server1 ~]# df -h | grep my-lvm
+Filesystem                  Size  Used Avail Use% Mounted on
+/dev/mapper/vg1-lv1         179M   11M  168M   6% /my-lvm    ....... 11M used
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2868,6 +2894,103 @@ file or directory to be created
 
 06_03-Resizing Logical Volumes on the Fly
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+[root@server1 ~]# df -h | grep my-lvm
+Filesystem                  Size  Used Avail Use% Mounted on
+/dev/mapper/vg1-lv1         179M   11M  168M   6% /my-lvm  ..........6% or  168M avilable
+
+
+
+need more space?  use vgextend
+-----------------------
+
+[root@server1 ~]# pvscan
+  PV /dev/sdb10   VG vg1             lvm2 [92.00 MiB / 0    free]
+  PV /dev/sdb11   VG vg1             lvm2 [92.00 MiB / 0    free]
+  PV /dev/sda2    VG cs_master       lvm2 [<29.00 GiB / 0    free]
+  PV /dev/sdb12                      lvm2 [94.00 MiB]        .......................... check physical volume that is not been used,
+  Total: 4 [<29.27 GiB] / in use: 3 [<29.18 GiB] / in no VG: 1 [94.           00 MiB]
+
+
+
+
+
+
+
+
+
+
+[root@server1 ~]# vgs
+  VG        #PV #LV #SN Attr   VSize   VFree
+  cs_master   1   2   0 wz--n- <29.00g    0
+  vg1         2   1   0 wz--n- 184.00m    0        vg1 has size 184M
+
+[root@server1 ~]# vgscan
+  Found volume group "vg1" using metadata type lvm2
+  Found volume group "cs_master" using metadata type lvm2
+
+
+[root@server1 ~]# vgextend vg1 /dev/sdb12      
+  Volume group "vg1" successfully extended    ............. old vg1(184) + 
+ new sdb12(94M) = 278 M is extended on vg1
+
+[root@server1 ~]# vgs
+  VG        #PV #LV #SN Attr   VSize   VFree
+  cs_master   1   2   0 wz--n- <29.00g     0
+  vg1         3   1   0 wz--n- 276.00m 92.00m
+
+
+[root@server1 ~]# vgscan
+  Found volume group "vg1" using metadata type lvm2
+  Found volume group "cs_master" using metadata type lvm2
+
+
+
+
+now extend on LV from VG
+----------------------------
+
+[root@server1 ~]# lvs
+  LV   VG        Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  root cs_master -wi-ao---- <26.00g                                           
+  swap cs_master -wi-ao----   3.00g                                           
+  lv1  vg1       -wi-ao---- 184.00m       .................. old lv size = 184M
+
+
+
+
+[root@server1 ~]# lvextend -L +50m /dev/vg1/lv1      ...............+50 m added from vg1 
+  Rounding size to boundary between physical extents: 52.00 MiB.
+  Size of logical volume vg1/lv1 changed from 184.00 MiB (46 extents) to 236.00 MiB (59 extents).
+  Logical volume vg1/lv1 successfully resized.
+
+
+
+[root@server1 ~]# lvs
+  LV   VG        Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  root cs_master -wi-ao---- <26.00g                                           
+  swap cs_master -wi-ao----   3.00g                                           
+  lv1  vg1       -wi-ao---- 236.00m    ................. new lv1 size 184 to 236 m
+
+
+
+
+
+[root@server1 ~]# df -h /my-lvm/
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/vg1-lv1  179M   11M  168M   6% /my-lvm  ............yuck file system is same ..... need to resize
+
+
+
+[root@server1 ~]# xfs_growfs /my-lvm/            ........... resizing file system
+
+
+[root@server1 ~]# df -h /my-lvm/
+Filesystem           Size  Used Avail Use% Mounted on
+/dev/mapper/vg1-lv1  231M   12M  220M   5% /my-lvm  ...........walla not storage grows from 168 to 220M
+
+
 
 
 
