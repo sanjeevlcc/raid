@@ -2506,26 +2506,71 @@ touch: cannot touch 'file3': Permission denied
 
 
 
+
+
+
 ===============================================================================
 06. Managing Logical Volumes
 ===============================================================================
 
+Logical Volumes (LVs) are a concept within the Logical Volume Manager (LVM) 
+system used in Linux. 
+
+LVM is a flexible and dynamic storage management system that allows for
+easy management of disk space, resizing of filesystems, and other
+advanced storage features.
+
+
+Basic Concepts:
+------------------------------
+
+    Physical Volumes (PVs):
+    ------------------------------
+            Physical Volumes are physical storage devices like hard drives 
+            or partitions that are part of the LVM system.
+    
+    Volume Groups (VGs):
+    ------------------------------
+            Volume Groups are logical containers that consist of one or
+            more Physical Volumes.
+    
+    
+    Logical Volumes (LVs):
+    ------------------------------
+          Logical Volumes are slices or partitions within Volume Groups. 
+          They are the storage entities that are actually used 
+          by the operating system.
 
 
 
-
+06_01-Welcome to LVM2
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 
 
+06_02-Creating LVMs in CentOS 7
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+
+
+06_03-Resizing Logical Volumes on the Fly
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 
 
+06_04-LVM Snapshots
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+06_05-Migrating PVs to New Storage
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
 
 
 
@@ -2537,6 +2582,13 @@ touch: cannot touch 'file3': Permission denied
 
 
 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
