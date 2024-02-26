@@ -2546,11 +2546,323 @@ Basic Concepts:
 06_01-Welcome to LVM2
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+                          +--------------------------+
+                          |   Create Physical Volume |
+                          |                          |
+                          |   pvcreate /dev/sdb      |
+                          +--------------------------+
+                                        |
+                                        v
+                          +--------------------------+
+                          |   Create Volume Group    |
+                          |                          |
+                          |   vgcreate myvg /dev/sdb |
+                          +--------------------------+
+                                        |
+                                        v
+                          +--------------------------+
+                          |   Create Logical Volume  |
+                          |                          |
+                          | lvcreate -L 20G -n mylv  |
+                          | myvg                     |
+                          +--------------------------+
+
+
+
+
+
+    ******************************************************
+
+
++-----------------------+
+|                       |
+| Create Physical Volume|
+|   pvcreate /dev/sdb   |
+|                       |
++-----------------------+       +-------------------------+
+                                |                         |
++-----------------------+       | Create Volume Group     |
+|                       |       |   vgcreate myvg /dev/sdb|
+| Create Volume Group   |       |                         |
+| vgcreate myvg /dev/sdb|       +-------------------------+
+|                       |
++-----------------------+       +-------------------------+
+                                |                         |
++-----------------------+       | Create Logical Volume   |
+|                       |       | lvcreate -L 20G -n mylv |
+| Create Logical Volume |       | myvg                    |
+|lvcreate -L 20G -n mylv|      |                         |
+| myvg                  |       +-------------------------+
++-----------------------+
+
+
+
+
+
 
 
 
 06_02-Creating LVMs in CentOS 7
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+[root@server1 ~]# pvscan
+  PV /dev/sda2   VG cs_master       lvm2 [<29.00 GiB / 0    free]
+  Total: 1 [<29.00 GiB] / in use: 1 [<29.00 GiB] / in no VG: 0 [0   ]
+
+
+
+
+
+[root@server1 ~]# vgscan
+  Found volume group "cs_master" using metadata type lvm2
+
+
+
+
+
+[root@server1 ~]# lvscan
+  ACTIVE            '/dev/cs_master/swap' [3.00 GiB] inherit
+  ACTIVE            '/dev/cs_master/root' [<26.00 GiB] inherit
+
+
+
+
+
+
+
+
+[root@server1 ~]# fdisk -l /dev//sdb
+
+Device      Boot   Start      End  Sectors Size Id Type
+/dev//sdb10       978944  1171455   192512  94M 8e Linux LVM  .................... chcking the partioned disk
+/dev//sdb11      1173504  1368063   194560  95M 8e Linux LVM
+/dev//sdb12      1370112  1562623   192512  94M 8e Linux LVM
+
+
+
+
+                        +---------------------------------------+
+                        |                                       |
+                        |   Create PVs                          |
+                        |   pvcreate /dev/sdb10                 |
+                        |   pvcreate /dev/sdb11                 |
+                        |   pvcreate /dev/sdb12                 |
+                        |                                       |
+                        +---------------------------------------+  
+                              |                              |
+                              |                              V
+                              |                       +-----------------------+
+                              V                      |                       |
+                  +-----------------------+         |   Create VG           |
+                  |                       |         |   vgcreate vg1        |
+                  |   Create VG           |         |   /dev/sdb10          |
+                  |   vgcreate vg1        |         |   /dev/sdb11          |
+                  |   /dev/sdb10          |         |                       |
+                  |   /dev/sdb11          |         +-----------------------+
+                  |   /dev/sdb12          |                     |
+                  +-----------------------+                     v
+                                                     +-----------------------+
+                                                    |                       |
+                    +-----------------------+       |   Create LV           |
+                    |                       |       |   lvcreate -n lv1      |
+                    |   Create LV           |       |   -L 184M             |
+                    |   lvcreate -n lv1     |       |   vg1                 |
+                    |   -L 184M             |       |                       |
+                    |   vg1                 |       +-----------------------+
+                    +-----------------------+
+
+
+
+
+creating physical volume on sdb 10 11 12
+-------------------------------------------
+[root@server1 ~]# pvcreate /dev/sdb10
+  Physical volume "/dev/sdb10" successfully created.
+[root@server1 ~]# pvcreate /dev/sdb11
+  Physical volume "/dev/sdb11" successfully created.
+[root@server1 ~]# pvcreate /dev/sdb12
+  Physical volume "/dev/sdb12" successfully created.
+
+
+
+
+
+volume grpup on sdb10 and sdb11
+----------------------------------------
+
+[root@server1 ~]# vgcreate vg1 /dev/sdb10 /dev/sdb11
+  Volume group "vg1" successfully created
+
+
+
+
+
+[root@server1 ~]# vgscan
+  Found volume group "vg1" using metadata type lvm2
+  Found volume group "cs_master" using metadata type lvm2
+
+
+
+[root@server1 ~]# vgs
+  VG        #PV #LV #SN Attr   VSize   VFree
+  cs_master   1   2   0 wz--n- <29.00g      0
+  vg1         2   0   0 wz--n- 184.00m 184.00m
+
+
+
+logical volume created
+--------------------------
+[root@server1 ~]# lvcreate -n lv1 -L 184m vg1
+  Logical volume "lv1" created.
+
+
+
+
+
+[root@server1 ~]# lvscan
+  ACTIVE            '/dev/vg1/lv1' [184.00 MiB] inherit
+  ACTIVE            '/dev/cs_master/swap' [3.00 GiB] inherit
+  ACTIVE            '/dev/cs_master/root' [<26.00 GiB] inherit
+
+
+
+
+[root@server1 ~]# lvs
+  LV   VG        Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  root cs_master -wi-ao---- <26.00g                                
+  swap cs_master -wi-ao----   3.00g                                
+  lv1  vg1       -wi-a----- 184.00m 
+
+
+
+
+[root@server1 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINT
+sda                  8:0    0   30G  0 disk
+├─sda1               8:1    0    1G  0 part  /boot
+└─sda2               8:2    0   29G  0 part
+  ├─cs_master-root 253:0    0   26G  0 lvm   /
+  └─cs_master-swap 253:1    0    3G  0 lvm   [SWAP]
+sdb                  8:16   0    8G  0 disk
+├─sdb1               8:17   0    1K  0 part
+├─sdb5               8:21   0   93M  0 part  [SWAP]
+├─sdb6               8:22   0   95M  0 part  /data/mydata
+├─sdb7               8:23   0   94M  0 part  /data/mydata2
+├─sdb8               8:24   0   94M  0 part
+├─sdb9               8:25   0   95M  0 part
+├─sdb10              8:26   0   94M  0 part
+│ └─vg1-lv1        253:2    0  184M  0 lvm
+├─sdb11              8:27   0   95M  0 part
+│ └─vg1-lv1        253:2    0  184M  0 lvm
+├─sdb12              8:28   0   94M  0 part
+├─sdb13              8:29   0   94M  0 part
+│ └─md0              9:0    0   93M  0 raid1
+└─sdb14              8:30   0   95M  0 part
+  └─md0              9:0    0   93M  0 raid1
+sr0                 11:0    1 1024M  0 rom
+
+
+
+
+making fie system for that lvm i.e lv1
+-------------------------------------
+
+[root@server1 ~]# mkfs.xfs /dev/vg1/lv1
+
+
+
+mount it
+-----------
+[root@server1 ~]# mkdir /my-lvm
+
+
+[root@server1 ~]# vi /etc/fstab
+
+/dev/vg1/lv1    /my-lvm         xfs     defaults        0 0
+
+
+[root@server1 ~]# mount -a
+
+
+
+view mount
+-------------
+
+[root@server1 ~]# df -h
+
+/dev/sda1                  1014M  300M  715M  30% /boot
+/dev/sdb6                    87M   15K   80M   1% /data/mydata
+/dev/sdb7                    84M  7.1M   77M   9% /data/mydata2
+tmpfs                       162M     0  162M   0% /run/user/0
+/dev/mapper/vg1-lv1         179M   11M  168M   6% /my-lvm
+
+
+
+
+
+
+[root@server1 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINT
+
+├─sdb10              8:26   0   94M  0 part
+│ └─vg1-lv1        253:2    0  184M  0 lvm   /my-lvm      ....... nicely mounted
+├─sdb11              8:27   0   95M  0 part
+│ └─vg1-lv1        253:2    0  184M  0 lvm   /my-lvm
+├─sdb12              8:28   0   94M  0 part
+
+
+
+[root@server1 ~]# mount  | grep vg1-lv1
+/dev/mapper/vg1-lv1 on /my-lvm type xfs (rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=32k,noquota)
+
+
+
+
+
+
+
+
+file or directory to be created
+--------------------------------------
++----------------------+
+|                      |
+|   Create Directory   |
+|   mkdir /my-lvm/dir1 |
+|                      |
++----------------------+
+             |
+             v
++----------------------+
+|                      |
+|   Create Files       |
+|   touch /my-lvm/file1|
+|   touch /my-lvm/file2|
+|                      |
++----------------------+
+             |
+             v
++----------------------+
+|                      |
+|   List Contents      |
+|   ls -l /my-lvm/     |
+|                      |
++----------------------+
+
+                            [root@server1 ~]# mkdir /my-lvm/dir1
+                            
+                            [root@server1 ~]# touch  /my-lvm/file1 file2
+                            
+                            [root@server1 ~]# ls -l /my-lvm/
+                            total 0
+                            drwxr-xr-x. 2 root root 6 Feb 26 01:39 dir1
+                            -rw-r--r--. 1 root root 0 Feb 26 01:39 file1
+
+
+
+
+
+
 
 
 
