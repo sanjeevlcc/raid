@@ -2995,14 +2995,249 @@ Filesystem           Size  Used Avail Use% Mounted on
 
 
 
+
+
+
+
+
+and the file remians persistence, not crashed
+-----------------------------------------------
+[root@server1 ~]# ls -l /my-lvm/
+total 12
+drwxr-xr-x. 2 root root     6 Feb 26 01:39 dir1
+-rw-r--r--. 1 root root     0 Feb 26 01:39 file1
+-rw-r--r--. 1 root root 10732 Feb 26 01:54 pigz.pdf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 06_04-LVM Snapshots
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+LVM snapshots are a feature of the Logical Volume Manager (LVM) that 
+allows you to create a read-only, point-in-time copy (snapshot) of a 
+logical volume. 
+
+Snapshots are useful for various purposes, such as backup operations 
+or creating a consistent state for data analysis.
+
+
+
+Here's an overview of LVM snapshots:
+---------------------------------------
+
+
+    Snapshot Volume:
+    ---------------------------
+        A snapshot volume is a temporary copy of 
+        a logical volume. 
+        It provides a consistent view of the data at
+        the time the snapshot is created.
+    
+    
+    Read-Only:
+    ---------------------------
+        Snapshots are read-only, meaning you can access the
+        data from the snapshot, but you cannot modify it.
+    
+    
+    Copy-on-Write (COW):
+    ---------------------------
+        LVM snapshots use a copy-on-write mechanism. 
+        Initially, the snapshot volume contains no data, and
+        changes made to the original volume are stored in the snapshot.
+
+
+
+Creating an LVM Snapshot:
+---------------------------
+
+    Create a Snapshot:
+    ---------------------
+          lvcreate --snapshot --size 1G --name snapshot1 /dev/myvg/mylv
+    
+        This command creates a snapshot named "snapshot1" 
+        of the logical volume "/dev/myvg/mylv" with a 
+        size of 1 gigabyte.
+    
+    
+    Mount the Snapshot:
+    ---------------------
+          mount /dev/myvg/snapshot1 /mnt/snapshot1
+    
+        This command mounts the snapshot volume to a 
+        mount point for examination.
+
+    
+    Access Data:
+    ---------------------
+        You can now access the data from the 
+        snapshot at /mnt/snapshot1 without affecting 
+        the original volume.
+    
+    
+    Remove the Snapshot:
+    ---------------------
+    
+          lvremove /dev/myvg/snapshot1
+    
+        After you are done with the snapshot, you
+        can remove it to free up space.
+
+
+
+
+Use Cases:
+---------------------
+        Backup:
+        --------
+            Creating a snapshot before performing backups ensures
+            a consistent state of the data.
+        
+        
+        Testing:
+        --------
+            Snapshots can be used for testing changes without 
+            modifying the original data.
+        
+        
+        Data Recovery:
+        --------
+            In case of accidental data modification, a snapshot
+            provides a point-in-time recovery option.
+
+
+
+
+
+Important Considerations:
+----------------------------
+      Storage Space:
+      ----------------
+          The size of the snapshot should be carefully
+          chosen based on the changes expected in the original 
+          volume during its existence.
+      
+      
+      Performance Impact:
+      ----------------
+          There is a performance impact when creating and 
+          maintaining snapshots, as changes are tracked using 
+          the COW mechanism.
+      
+      
+      Time Limit:
+      ----------------
+          Snapshots should not be kept for an extended 
+          period to avoid running out of space.
+
+
+
+  Always refer to the official documentation or specific guides for 
+  your Linux distribution for detailed and accurate instructions on 
+  working with LVM snapshots.
+  
+
+
+[root@server1 ~]# vgs
+  VG        #PV #LV #SN Attr   VSize   VFree
+  cs_master   1   2   0 wz--n- <29.00g     0
+  vg1         3   1   0 wz--n- 276.00m 40.00m    ............40m free space for snapshot taking 
+
+
+
+
+
+taking snapshot (-s) of 30m from 40m name backup
+----------------------------------------------------
+[root@server1 ~]# lvcreate -L 30m -s -n backup /dev/vg1/lv1
+  Rounding up size to full physical extent 32.00 MiB
+  Logical volume "backup" created.    ........................ no need to format
+
+
+
+[root@server1 ~]# mount /dev/vg1/backup /mnt/ -o nouuid,ro
+
+[root@server1 ~]# ls /mnt/
+dir1  file1  pigz.pdf                      ..................... yes the files can be viewed, chek as snapshot
+
+
+
+
+
+
+
+snapshot checking on deleting 
+--------------------------------
+[root@server1 ~]# ls /mnt/
+dir1  file1  pigz.pdf
+
+[root@server1 ~]# ls /my-lvm/
+dir1  file1  pigz.pdf
+
+[root@server1 ~]# rm -rf /my-lvm/file1    ............ file deleted from lv
+
+[root@server1 ~]# ls /my-lvm/        ............. no file foid in lv
+dir1  pigz.pdf
+
+[root@server1 ~]# ls /mnt/    ......................... but snap shot preserves file1 as backup
+dir1  file1  pigz.pdf
+
+
+
+
+
+
+
+[root@server1 ~]# tar -cf /root/backup.tar /mnt/
+
+[root@server1 ~]# ls -lh  /root/backup.tar
+-rw-r--r--. 1 root root 20K Feb 26 02:34 /root/backup.tar    .......... the backup file
+
+
+[root@server1 ~]# umount /mnt
+
+
+[root@server1 ~]# lvremove /dev/vg1/backup
+Do you really want to remove active logical volume vg1/backup? [y/n]: y
+  Logical volume "backup" successfully removed.
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 06_05-Migrating PVs to New Storage
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+[root@server1 ~]# poweroff
 
 
 
