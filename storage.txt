@@ -3234,14 +3234,21 @@ Do you really want to remove active logical volume vg1/backup? [y/n]: y
 
 
 06_05-Migrating PVs to New Storage
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++  SDC
 
 
 [root@server1 ~]# poweroff
 
 
-
-
+add disk on server1 == 8G from vm(VMWARE)
+---------------------------------------
+          stop server1 ==> settigs ==> Hard Disk ==> 
+                                      add ==> SCSI 
+                                          ==> create a virtual disk
+                                          ==> max size of disk = 8G
+                                          ==> disk file = lfcs3-server2.vmdk
+          
+              START MACHINE
 
 
 ===============================================================================
