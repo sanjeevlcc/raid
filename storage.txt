@@ -4238,7 +4238,7 @@ passwd: all authentication tokens updated successfully.
 
 
 ===============================================================================
-
+09. Implementing Aggregated Storage with GlusterFS
 ===============================================================================
 
 
@@ -4246,13 +4246,13 @@ passwd: all authentication tokens updated successfully.
 
 
 
-
+09_01-Welcome to the GlusterFS
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 
 
-
+09_02-Adding and Preparing Disks
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -4265,50 +4265,465 @@ passwd: all authentication tokens updated successfully.
 
 
 ===============================================================================
-
+10. Encrypted Volumes
 ===============================================================================
 
 
+    Encrypted volumes refer to storage spaces or partitions on a 
+    computer or server that have an added layer of security through encryption. 
+    
+    Encryption is the process of converting data into a format that 
+    is unreadable without the appropriate decryption key or password. 
+    
+    Encrypted volumes protect the data stored on them from unauthorized 
+    access, ensuring confidentiality and privacy.
+
+
+    The encryption process involves transforming the plaintext data
+    into ciphertext using an encryption algorithm and a secret key.
+    
+    The encrypted data is then stored on the volume. To access the 
+    data, a user must provide the correct decryption key or password.
+
+    One common method for creating encrypted volumes on Linux systems
+    is to use the Linux Unified Key Setup (LUKS) standard along with 
+    tools like cryptsetup. 
+    
+    LUKS provides a platform-independent on-disk format for 
+    encrypted volumes, ensuring compatibility across various Linux distributions.
 
 
 
 
 
+Benefits of using encrypted volumes include:
+-----------------------------------------------
+      Data Security: 
+      ----------------
+          Encrypted volumes protect sensitive data from unauthorized
+          access, even if physical access to the storage device is gained.
+
+
+      Confidentiality:
+      ----------------
+          Encrypting volumes ensures that the data remains confidential, 
+          preventing unauthorized users or entities from reading or modifying it.
+
+
+      Compliance: 
+      ----------------
+          Encrypting sensitive data is often a requirement for compliance
+          with various data protection regulations and standards.
+
+
+      Data-at-Rest Protection: 
+      -----------------------
+          Encrypted volumes provide protection for data at rest, meaning the
+          data is secure even when the system is powered off.
+
+
+      Additional Security Layers: 
+      -----------------------
+          Encrypted volumes can be part of a broader security strategy,
+          providing an additional layer of defense against data breaches.
+      
+      
+
+
+Common use cases for encrypted volumes include securing sensitive 
+files, protecting personal or financial information, and ensuring 
+the confidentiality of data stored on servers or storage devices. 
+
+It's important to manage encryption keys or passwords securely, as 
+they are critical for accessing the encrypted data.
+
+
+
+
+10_01-Full Disk Encryption
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 
 
 
+
+
+
+
+
+
+
+10_02-Shredding Disks
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+[root@server1 ~]# vgs
+  VG        #PV #LV #SN Attr   VSize   VFree
+  cs_master   1   2   0 wz--n- <29.00g      0
+  vg1         3   2   0 wz--n- 480.00m 144.00m    .............144 aviable
+
+
+
+
+[root@server1 ~]# lvcreate -L 60m -n enc_disk vg1
+  Logical volume "enc_disk" created.
+
+
+
+
+[root@server1 ~]# shred -v --iterations=1 /dev/vg1/enc_disk
+shred: /dev/vg1/enc_disk: pass 1/1 (random)...      ...............encrepted volume
+
+
+
+
+
+
+10_03-Encrypting Disks
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 
+[root@server1 ~]# grep -i ACL /boot/config-$(uname -r)
+CONFIG_EXT4_FS_POSIX_ACL=y
+CONFIG_XFS_POSIX_ACL=y
+CONFIG_FS_POSIX_ACL=y
+CONFIG_TMPFS_POSIX_ACL=y
+CONFIG_NFS_V3_ACL=y
+CONFIG_NFSD_V2_ACL=y
+CONFIG_NFSD_V3_ACL=y
+CONFIG_NFS_ACL_SUPPORT=m
+CONFIG_CEPH_FS_POSIX_ACL=y
 
+
+
+
+          kernel configuration options for disk encryption:
+          ------------------------------------------------
+                Device Mapper (DM):
+                    CONFIG_BLK_DEV_DM: Device mapper support
+                    CONFIG_DM_VERITY: Device mapper support for verity target
+                    CONFIG_DM_SWITCH: Device mapper support for switch target
+                    CONFIG_DM_LOG_WRITES: Device mapper support for log writes target
+                    CONFIG_DM_SNAPSHOT: Device mapper support for snapshot target
+                    CONFIG_DM_THIN_PROVISIONING: Device mapper support for thin provisioning target
+                    CONFIG_DM_ZERO: Device mapper support for zero target
+                    ...
+              
+          
+              Cryptographic API:
+                    CONFIG_CRYPTO: Cryptographic API
+                    CONFIG_CRYPTO_XTS: XTS block cipher mode
+                    CONFIG_CRYPTO_CBC: CBC block cipher mode
+                    ...
+          
+          
+              File System Encryption:
+                  CONFIG_DM_CRYPT: Device mapper support for transparent data encryption
+                  CONFIG_FS_ENCRYPTION: Filesystem Encryption (EXPERIMENTAL)
+                  CONFIG_FSCRYPT: Filesystem crypto API support
+                  ...
+          
+              LUKS (Linux Unified Key Setup):
+                    CONFIG_DM_CRYPT: Device mapper support for transparent data encryption
+                    CONFIG_CRYPTO_AES: AES cipher algorithms
+                    CONFIG_CRYPTO_XTS: XTS block cipher mode
+                    ...
+          
+          
+          
+[root@server1 ~]# grep -i DM_CRYPT /boot/config-$(uname -r)
+CONFIG_DM_CRYPT=m            ............may be support by kernel modeule
+
+
+
+[root@server1 ~]# lsmod | grep dm_crypt
+[root@server1 ~]#
+
+
+
+[root@server1 ~]# modprobe dm_crypt        .........shelf load
+[root@server1 ~]# lsmod | grep dm_crypt
+dm_crypt               49152  0
+dm_mod                155648  20 dm_crypt,dm_log,dm_mirror
+
+
+
+
+
+[root@server1 ~]# rpm -qf $(which cryptsetup)
+cryptsetup-2.3.7-7.el8.x86_64
+
+
+
+
+
+[root@server1 ~]# cryptsetup -y luksFormat /dev/vg1/enc_disk
+
+WARNING!
+========
+This will overwrite data on /dev/vg1/enc_disk irrevocably.
+
+Are you sure? (Type 'yes' in capital letters): YES
+Enter passphrase for /dev/vg1/enc_disk: A@pple@1234
+Verify passphrase: A@pple@1234
+
+
+
+[root@server1 ~]# echo $?
+0
+
+
+
+
+
+[root@server1 ~]# cryptsetup luksDump /dev/vg1/enc_disk
+LUKS header information
+Version:        2
+Epoch:          3
+Metadata area:  16384 [bytes]
+Keyslots area:  16744448 [bytes]
+UUID:           5203bfcc-ae12-4ad5-98d7-204df3e14f7e
+Label:          (no label)
+Subsystem:      (no subsystem)
+Flags:          (no flags)
+
+Data segments:
+  0: crypt
+        offset: 16777216 [bytes]
+        length: (whole device)
+        cipher: aes-xts-plain64
+        sector: 512 [bytes]
+
+Keyslots:
+  0: luks2
+        Key:        512 bits
+        Priority:   normal
+        Cipher:     aes-xts-plain64
+        Cipher key: 512 bits
+        PBKDF:      argon2i
+        Time cost:  4
+        Memory:     337408
+        Threads:    1
+        Salt:       74 26 e7 66 3b 8e c1 f4 92 87 eb aa 35 d4 64 23
+                    40 dd c6 43 71 ad cb 0d d4 2c 75 88 ec 55 12 75
+        AF stripes: 4000
+        AF hash:    sha256
+        Area offset:32768 [bytes]
+        Area length:258048 [bytes]
+        Digest ID:  0
+Tokens:
+Digests:
+  0: pbkdf2
+        Hash:       sha256
+        Iterations: 71624
+        Salt:       f1 12 dc a6 7f 81 08 fb 16 0d 38 c3 e9 ae f5 d9
+                    65 5a 43 8a c2 a9 e6 fa 66 bc ed 33 d7 6b cf ce
+        Digest:     08 bd a8 6a be 77 30 b8 a3 23 c4 f8 6e 24 0b 42
+                    96 44 f5 6e 14 f1 ec a3 95 9d 70 c4 43 ab 36 52
+
+
+
+
+
+
+
+
+
+[root@server1 ~]# cryptsetup isLuks /dev/vg1/enc_disk
+[root@server1 ~]# echo $?
+0              .............................. TRUE is encrypted disk
+
+
+[root@server1 ~]# cryptsetup isLuks /dev/vg1/web_lv
+[root@server1 ~]# echo $?
+1              .............................. FALSE as not encrypted disk
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+10_04-Opening Encrypted Disks and Formatting
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+[root@server1 ~]# cryptsetup luksOpen /dev/vg1/enc_disk enc_vol
+Enter passphrase for /dev/vg1/enc_disk: A@pple@1234
+
+
+[root@server1 ~]# echo $?
+0
+
+
+
+[root@server1 ~]# ls /dev/mapper/enc_vol
+/dev/mapper/enc_vol                            ............. symbolic link
+
+
+
+
+[root@server1 ~]# mkfs.xfs /dev/mapper/enc_vol
+
+
+
+
+
+
+
+10_05-Mounting at Boot
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+[root@server1 ~]# ls -l /dev/mapper/
+total 0
+crw-------. 1 root root 10, 236 Feb 26 02:41 control
+lrwxrwxrwx. 1 root root       7 Feb 26 02:41 cs_master-root -> ../dm-0
+lrwxrwxrwx. 1 root root       7 Feb 26 02:41 cs_master-swap -> ../dm-1
+lrwxrwxrwx. 1 root root       7 Feb 26 22:00 enc_vol -> ../dm-5
+lrwxrwxrwx. 1 root root       7 Feb 26 21:57 vg1-enc_disk -> ../dm-4
+lrwxrwxrwx. 1 root root       7 Feb 26 18:24 vg1-lv1 -> ../dm-2
+lrwxrwxrwx. 1 root root       7 Feb 26 19:06 vg1-web_lv -> ../dm-3
+
+
+
+[root@server1 ~]# cryptsetup luksClose enc_vol
+[root@server1 ~]# echo $?
+0
+
+
+[root@server1 ~]# cryptsetup luksOpen /dev/vg1/enc_disk  enc_data_vol
+Enter passphrase for /dev/vg1/enc_disk:  A@pple@1234
+
+
+
+
+[root@server1 ~]# \ls /dev/mapper/
+control         cs_master-swap  vg1-enc_disk  vg1-web_lv
+cs_master-root  enc_data_vol    vg1-lv1
+
+
+
+
+[root@server1 ~]# blkid  | grep vg1-enc
+/dev/mapper/vg1-enc_disk: UUID="5203bfcc-ae12-4ad5-98d7-204df3e14f7e" TYPE="crypto_LUKS"
+
+
+
+
+[root@server1 ~]# vi /etc/crypttab
+luks-data       UUID="5203bfcc-ae12-4ad5-98d7-204df3e14f7e"
+
+
+[root@server1 ~]# vim /etc/fstab
+/dev/mapper/luks-data   /luks-data      xfs     defaults        0 0
+
+
+[root@server1 ~]# mkdir /luks-data
+
+
+[root@server1 ~]# cryptsetup luksClose enc_data_vol
+
+[root@server1 ~]# cryptsetup luksOpen /dev/vg1/enc_disk  luks-data
+Enter passphrase for /dev/vg1/enc_disk: A@pple@1234
+[root@server1 ~]#
+
+
+
+[root@server1 ~]# mount -a
+
+
+[root@server1 ~]# mount | grep luks
+/dev/mapper/luks-data on /luks-data type xfs (rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=32k,noquota)
+
+
+
+
+
+
+[root@server1 ~]# lsblk  /dev/sdc
+NAME             MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINT
+sdc                8:32   0    8G  0 disk
+└─sdc1             8:33   0  300M  0 part
+  ├─vg1-lv1      253:2    0  236M  0 lvm   /my-lvm
+  ├─vg1-web_lv   253:3    0  100M  0 lvm
+  └─vg1-enc_disk 253:4    0   60M  0 lvm
+    └─luks-data  253:5    0   44M  0 crypt /luks-data
+
+
+
+[root@server1 ~]# cat /etc/crypttab
+luks-data       UUID="5203bfcc-ae12-4ad5-98d7-204df3e14f7e"
+
+
+[root@server1 ~]# tail -n 1 /etc/fstab
+/dev/mapper/luks-data   /luks-data      xfs     defaults        0 0
+
+
+
+                                  ******************
+                                  REBOOT SYSTEM
+                                  *****************
+
+
+please enter passphrase for disk vg1_enc_disk (luks0data) on /luks-data !: A@pple@1234
+
+login as: root
+root@192.168.1.111's password:
+[root@server1 ~]#
+[root@server1 ~]# hostname
+server1.sanjeevthapa.com
+[root@server1 ~]# hostname -I
+192.168.1.111
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 ===============================================================================
-
-===============================================================================
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
+11. Using the Automounter
 ===============================================================================
 
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+===============================================================================
+12. Implement User and Group Quotas
 ===============================================================================
 
 
