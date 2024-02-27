@@ -4052,6 +4052,7 @@ Here is a general outline of the steps involved in implementing HA clusters:
       service disruptions.
 
 
+
 11. Training and Documentation:
 --------------------------------------------
       Provide training to administrators on managing and 
@@ -4104,13 +4105,109 @@ Here is a general outline of the steps involved in implementing HA clusters:
 
 
 
+
+
+
 08_02-Installing Pacemaker
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+[root@server1 ~]# vi /etc/yum.repos.d/CentOS-Stream-HighAvailability.repo    ...... in server2 also
+    enabled=1
+:wq
+
+[root@server1 ~]# yum repolist all | grep ha
+ha                             CentOS Stream 8 - HighAvailability       enabled
 
 
-08_03-Creating the Cluster
+[root@server1 ~]# yum install pacemaker pcs resource-agents
+
+[root@server2 ~]# yum install pacemaker pcs resource-agents
+
+[root@server1 ~]# cat /etc/passwd | grep hacluster
+hacluster:x:189:189:cluster user:/home/hacluster:/sbin/nologin
+
+
+
+[root@server1 ~]# echo 'hacluster:Password' | chpasswd
+
+[root@server2 ~]#  echo 'hacluster:Password' | chpasswd
+
+
+
+
+
+[root@server1 ~]# firewall-cmd --permanent --add-service=high-availability
+success
+[root@server1 ~]# firewall-cmd --reload
+success
+
+
+
+[root@server2 ~]# firewall-cmd --permanent --add-service=high-availability
+success
+[root@server2 ~]# firewall-cmd --reload
+success
+
+
+
+
+
+
+
+
+[root@server1 ~]# echo 'Password' | passwd --stdin hacluster
+Changing password for user hacluster.
+passwd: all authentication tokens updated successfully.
+
+
+
+[root@server2 ~]# echo 'Password' | passwd --stdin hacluster
+Changing password for user hacluster.
+passwd: all authentication tokens updated successfully.
+
+
+
+
+
+
+
+
+
+
+
+08_03-Creating/ configure  the Cluster
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+[root@server1 ~]# systemctl enable pcsd
+.
+[root@server1 ~]# systemctl start pcsd
+
+
+
+
+
+[root@server2 ~]#  systemctl enable pcsd
+
+[root@server2 ~]#  systemctl start pcsd
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 08_04-Understanding STONITH and QUORUM
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -4126,6 +4223,8 @@ Here is a general outline of the steps involved in implementing HA clusters:
 
 08_06-Installing and Configuring Apache
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
 
 
 08_07-Clustering Apache
