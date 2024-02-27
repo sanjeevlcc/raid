@@ -1,27 +1,36 @@
 
 
-How to Install and Configure CSF on AlmaLinux 9
+How to Install and Configure CSF CenOS7
 ====================================================
 
 
 
-ConfigServer Security & Firewall (CSF) is an iptables-based firewall 
-that provides high-level security to the Linux system.
+                                ConfigServer Security & Firewall (CSF) is an iptables-based firewall 
+                                that provides high-level security to the Linux system.
+                                
+                                CSF includes a wide range of features, 
+                                -------------------------------------
+                                        such as IP blocking, 
+                                        port blocking, and 
+                                        DoS protection. 
+                                
+                                
+                                It also supports advanced security measures, 
+                                -------------------------------------
+                                        such as rate limiting, 
+                                        connection tracking, 
+                                        and SSH login detection. 
 
-CSF includes a wide range of features, 
-        such as IP blocking, 
-        port blocking, and 
-        DoS protection. 
 
 
-It also supports advanced security measures, 
-        such as rate limiting, 
-        connection tracking, 
-        and SSH login detection. 
 
-In addition to its firewall features, CSF includes tools for 
-        system and file integrity checking, 
-        as well as email and login tracking.
+                                In addition to its firewall features, CSF includes tools for 
+                                -------------------------------------
+                                        system and file integrity checking, 
+                                        as well as email and login tracking.
+
+
+
 
 
 Step 1: Update Operating System
