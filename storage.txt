@@ -4704,22 +4704,166 @@ server1.sanjeevthapa.com
 
 
 ===============================================================================
-11. Using the Automounter
+11. Using the Automounter - NFS
 ===============================================================================
+The automounter, also known as autofs, is a system service on 
+Unix-like operating systems that automatically mounts and unmounts 
+filesystems as needed. 
+
+This service helps manage network filesystems, removable media, 
+and other dynamic filesystems efficiently.
 
 
+sudo yum install autofs
+sudo nano /etc/auto.master
+                  /mount_point   /etc/auto.mount_file
+
+sudo nano /etc/auto.mount_file
+                  share_name   -fstype=nfs,rw   server:/path/to/share
+
+sudo systemctl start autofs
+cd /mount_point/share_name
+
+
+
+
+11_01-Using the Default AutoFS Options
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+[root@server1 ~]# yum list installed
+[root@server1 ~]# yum list installed | grep autofs
+[root@server1 ~]# yum list avilable | grep autofs
+
+
+[root@server1 ~]# yum install autofs
+
+
+
+[root@server1 ~]# ls /etc/auto*
+/etc/autofs.conf            /etc/auto.master  /etc/auto.net
+/etc/autofs_ldap_auth.conf  /etc/auto.misc    /etc/auto.smb
+
+
+
+
+
+[root@server1 ~]# vim /etc/autofs.conf
+
+[root@server1 ~]# vim /etc/auto.master
+
+
+
+[root@server1 ~]# ls /misc
+ls: cannot access '/misc': No such file or directory
+
+[root@server1 ~]# systemctl start autofs
+
+[root@server1 ~]# ls /misc/
+[root@server1 ~]#
+
+
+
+
+[root@server1 ~]# vi /etc/auto.misc    ............... mapping dir
+
+
+
+
+
+
+
+
+
+
+11_02-Automounting the Encrypted Partition
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+[root@server1 misc]# lsblk  /dev/sdc
+NAME             MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINT
+sdc                8:32   0    8G  0 disk
+└─sdc1             8:33   0  300M  0 part
+  ├─vg1-lv1      253:2    0  236M  0 lvm   /my-lvm
+  ├─vg1-web_lv   253:3    0  100M  0 lvm
+  └─vg1-enc_disk 253:4    0   60M  0 lvm
+    └─luks-data  253:5    0   44M  0 crypt /luks-data
+
+
+
+
+[root@server1 misc]# mount | grep luks
+/dev/mapper/luks-data on /luks-data type xfs (rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=32k,noquota)
+
+
+
+umount luks folder
+-----------------------
+[root@server1 ~]# umount /luks-data
+
+[root@server1 ~]# mount | grep luks
+
+[root@server1 ~]# vim /etc/fstab
+  #/dev/mapper/luks-data  /luks-data      xfs     defaults        0 0    .....disable mount of luks
+
+
+
+[root@server1 ~]# tail -n 1 /etc/fstab
+#/dev/mapper/luks-data  /luks-data      xfs     defaults        0 0
+
+
+
+[root@server1 ~]# cryptsetup luksClose luks-data
+[root@server1 ~]#
+
+
+
+
+[root@server1 ~]# cat /etc/crypttab
+luks-data       UUID="5203bfcc-ae12-4ad5-98d7-204df3e14f7e"
+
+
+[root@server1 ~]# grep misc /etc/auto.master
+/misc   /etc/auto.misc
+# Note that if there are entries for /net or /misc (as
+
+
+
+
+
+
+
+[root@server1 ~]# vim /etc/auto.misc
+luks            -fstype=xfs     :/dev/mapper/luks-data
+
+
+[root@server1 ~]# systemctl restart autofs.service
+
+
+
+
+
+
+
+
+
+
+
+11_03-Quick Setup of an NFS Server
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+11_04-Automount Remote Mounts
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 
 
 
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 ===============================================================================
