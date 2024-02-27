@@ -3789,6 +3789,9 @@ tcp        0      0 0.0.0.0:3260            0.0.0.0:*               LISTEN
 
 
 
+
+
+
 07_05-Configure iSCSI Initiator(Client)
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++ SERVER2
 
@@ -4083,6 +4086,20 @@ Here is a general outline of the steps involved in implementing HA clusters:
 
 08_01-Introduction to HA Clusters
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                   +----------------------+
+                   |    Load Balancer     |
+                   |   Virtual IP:        |
+                   |   192.168.1.110      |
+                   +----------+-----------+
+                              |
+            +-----------------|---------------------+
+            |                                       |
++-----------v----------------+         +------------v------------+
+|  Server1                   |         |  Server2                |
+|                            |         |                         |
+|  server1.sanjeevthapa.com  |         | server2.mivaanthapa.com |
+|  192.168.1.111             |         | 192.168.1.112           |
++----------------------------+         +-------------------------+
 
 
 
