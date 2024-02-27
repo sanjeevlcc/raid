@@ -3251,57 +3251,873 @@ add disk on server1 == 8G from vm(VMWARE)
               START MACHINE
 
 
-===============================================================================
+
++---------------------------+
+|                           |
+|   Migrate PVs to New      |
+|   Storage                 |
+|                           |
++---------------------------+
+             |
+             v
++---------------------------+
+|                           |
+|   Create PVs on New       |
+|   Storage                 |
+|   pvcreate /dev/new_sdc1  |
+|   pvcreate /dev/new_sdc2  |
+|                           |
++---------------------------+
+             |
+             v
++---------------------------+
+|                           |
+|   Extend VG with New PVs  |
+|   vgextend vg1 /dev/new_sdc1|
+|   vgextend vg1 /dev/new_sdc2|
+|                           |
++---------------------------+
+             |
+             v
++---------------------------+
+|                           |
+|   Migrate LVs to New PVs  |
+|   pvmove /dev/old_sdb1    |
+|   pvmove /dev/old_sdb2    |
+|                           |
++---------------------------+
+             |
+             v
++---------------------------+
+|                           |
+|   Remove Old PVs          |
+|   vgreduce vg1 /dev/old_sdb1|
+|   vgreduce vg1 /dev/old_sdb2|
+|                           |
++---------------------------+
+
+
+
+
+
+
+[root@server1 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINT
+sda                  8:0    0   30G  0 disk
+├─sda1               8:1    0    1G  0 part  /boot
+└─sda2               8:2    0   29G  0 part
+  ├─cs_master-root 253:0    0   26G  0 lvm   /
+  └─cs_master-swap 253:1    0    3G  0 lvm   [SWAP]
+sdb                  8:16   0    8G  0 disk
+├─sdb1               8:17   0    1K  0 part
+├─sdb5               8:21   0   93M  0 part  [SWAP]
+├─sdb6               8:22   0   95M  0 part  /data/mydata
+├─sdb7               8:23   0   94M  0 part  /data/mydata2
+├─sdb8               8:24   0   94M  0 part
+├─sdb9               8:25   0   95M  0 part
+├─sdb10              8:26   0   94M  0 part
+│ └─vg1-lv1        253:2    0  236M  0 lvm   /my-lvm
+├─sdb11              8:27   0   95M  0 part
+│ └─vg1-lv1        253:2    0  236M  0 lvm   /my-lvm
+├─sdb12              8:28   0   94M  0 part
+│ └─vg1-lv1        253:2    0  236M  0 lvm   /my-lvm
+├─sdb13              8:29   0   94M  0 part
+│ └─md0              9:0    0   93M  0 raid1
+└─sdb14              8:30   0   95M  0 part
+  └─md0              9:0    0   93M  0 raid1
+sdc                  8:32   0    8G  0 disk  .................... new disk of 8k added
+sr0                 11:0    1 1024M  0 rom
+
+
+
+
+[root@server1 ~]# fdisk /dev/sdc
+
+Command (m for help): n    *******************
+Partition type
+   p   primary (0 primary, 0 extended, 4 free)
+   e   extended (container for logical partitions)
+Select (default p):
+
+Using default response p. 
+Partition number (1-4, default 1): 
+First sector (2048-16777215, default 2048):
+Last sector, +sectors or +size{K,M,G,T,P} (2048-16777215, default 16777215): +300M  *******************
+
+Created a new partition 1 of type 'Linux' and of size 300 MiB.
+
+Command (m for help): t
+Selected partition 1
+Hex code (type L to list all codes): 8e   *******************
+Changed type of partition 'Linux' to 'Linux LVM'.
+
+Command (m for help): w   *******************
+The partition table has been altered.
+Calling ioctl() to re-read partition table.
+Syncing disks.
+
+
+
+
+
+
+
+
+
+
+[root@server1 ~]# fdisk -l /dev/sdc
+Device     Boot Start    End Sectors  Size Id Type
+/dev/sdc1        2048 616447  614400  300M 8e Linux LVM
+
+
+
+
+
+
+
+
+
+
+
+[root@server1 ~]# lsblk  /dev/sdc
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sdc      8:32   0    8G  0 disk
+└─sdc1   8:33   0  300M  0 part
+
+
+
+
+[root@server1 ~]# pvcreate /dev/sdc1
+  Physical volume "/dev/sdc1" successfully created.
+
+
+[root@server1 ~]# vgextend vg1 /dev/sdc1
+  Volume group "vg1" successfully extended    .............. adding in vg1 group
+
+
+
+[root@server1 ~]# pvmove /dev/sdb10  /dev/sdc1
+  /dev/sdb10: Moved: 100.00%
+
+
+
+
+
+[root@server1 ~]# vgreduce vg1 /dev/sdb10
+  Removed "/dev/sdb10" from volume group "vg1"
+
+
+[root@server1 ~]# pvremove /dev/sdb10    ...........remove header info
+  Labels on physical volume "/dev/sdb10" successfully wiped.
+
+
+
+
+[root@server1 ~]# vgs vg1
+  VG  #PV #LV #SN Attr   VSize   VFree
+  vg1   3   1   0 wz--n- 480.00m 244.00m  ............. 244 free for next lv
+
+
+
+
+[root@server1 ~]# ls /my-lvm/  ............ viewing persistence of files
+dir1  pigz.pdf
+[root@server1 ~]# file /my-lvm/
+/my-lvm/: directory
+[root@server1 ~]# file /my-lvm/pigz.pdf
+/my-lvm/pigz.pdf: PDF document, version 1.4
+
+
+
+
+[root@server1 ~]# umount /my-lvm
+[root@server1 ~]# mount -a
+[root@server1 ~]# ls /my-lvm/
+dir1  pigz.pdf    ...........................data persist after umount
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ===============================================================================
+07. Configuring an iSCSI Block Storage Server
+===============================================================================
+
+                          +--------------------------+
+                          |                          |
+                          |   iSCSI Initiator        |
+                          |                          |
+                          +--------------------------+
+                                       |
+                                       v
+                          +--------------------------+
+                          |                          |
+                          |    TCP/IP Network        |
+                          |    (Ethernet/fiber)      |
+                          |                          |
+                          +--------------------------+
+                                       |
+                                       v
+                          +--------------------------+
+                          |                          |
+                          |   iSCSI Target           |
+                          |                          |
+                          +--------------------------+
+
+
+    iSCSI (Internet Small Computer System Interface) 
+    Block Storage  is a protocol used for accessing and managing 
+    storage devices over a TCP/IP network. 
+
+    iSCSI share block , often LVM's
+    
+    It enables the transfer of block-level data between an 
+    iSCSI initiator (client) and an iSCSI target (storage device). 
+    
+    iSCSI provides a flexible and cost-effective way to implement 
+    storage area networks (SANs) over existing Ethernet networks.
+
+
+
+Here are key features and components of iSCSI Block Storage:
+----------------------------------------------------------
+      Block-Level Storage:
+      -------------------------------
+          iSCSI operates at the block level, allowing the 
+          transfer of raw storage blocks between the initiator (client) 
+          and target (storage device).
+          This contrasts with file-level protocols like NFS or SMB.
+      
+      
+      Initiator and Target:
+      -------------------------------
+          Initiator: 
+          ---------
+          The iSCSI initiator is the client device that 
+          initiates communication with the iSCSI target. 
+          It can be a server, workstation, or any device requiring 
+          access to block storage.
+          
+          Target: 
+          ---------
+          The iSCSI target is the storage device or server 
+          that provides access to the block-level storage. 
+          It can be a dedicated storage appliance or a server with 
+          iSCSI target software.
+      
+      
+      TCP/IP Network:
+      -------------------------------
+          iSCSI leverages the standard TCP/IP network infrastructure 
+          for communication. 
+          This makes it easy to integrate with existing Ethernet 
+          networks, eliminating the need for specialized 
+          Fibre Channel networks.
+      
+      
+      Logical Unit Number (LUN):
+      -------------------------------
+          A Logical Unit Number (LUN) represents a logical 
+          addressable storage unit provided by the iSCSI target. 
+          Each LUN is associated with specific storage capacity 
+          on the target.
+      
+      
+      iSCSI Initiator Software:
+      -------------------------------
+          Initiator software is required on the client side to
+          enable communication with the iSCSI target. 
+          Most modern operating systems come with built-in iSCSI
+          initiator software, making it relatively easy to configure.
+      
+      
+      
+      Security:
+      -------------------------------
+          iSCSI supports security features such as
+          CHAP (Challenge-Handshake Authentication Protocol)
+          for authentication and IPsec for data encryption. 
+          These features help secure the communication 
+          between the initiator and target.
+      
+      
+      Use Cases:
+      -------------------------------
+          iSCSI Block Storage is commonly used in scenarios 
+          where block-level access to storage is required, 
+          such as virtualization environments, database storage, 
+          and shared storage for clustered servers.
+      
+      
+      Storage Virtualization:
+      -------------------------------
+          iSCSI enables storage virtualization by presenting 
+          remote storage as local block devices to the initiators. 
+          This allows for centralized storage management and
+          resource utilization.
+      
+      
+      Performance:
+      -------------------------------
+          While iSCSI operates over standard Ethernet networks, dedicated 
+          storage networks with higher bandwidth and low latency (such 
+          as 10GbE or faster) are often recommended for optimal performance.
+          
+
+
+iSCSI Block Storage provides a versatile and cost-effective 
+solution for organizations seeking centralized and scalable 
+storage solutions. 
+
+It is commonly used in conjunction with storage technologies 
+like RAID (Redundant Array of Independent Disks) for data 
+protection and performance enhancement.
 
 
 
 
 
+
+07_01-iSCSI and SANS
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 
 
-
+07_02-Install iSCSI Target and Configure Firewall
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+       kernel driven software
+
+
+[root@server1 ~]# yum install targetd targetcli -y
+
+
+[root@server1 ~]# systemctl enable targetd.service
+Created symlink /etc/systemd/system/multi-user.target.wants/targetd.service → /usr/lib/systemd/system/targetd.service.
+
+
+
+
+[root@server1 csf]# firewall-cmd --permanent --add-service=iscsi-target
+success
+[root@server1 csf]# firewall-cmd --reload
+success
+
+
+
+
+
+
+
+
+
+07_03-Create Logical Volume to Share as Block Device
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+[root@server1 ~]# vgs vg1
+  VG  #PV #LV #SN Attr   VSize   VFree
+  vg1   3   1   0 wz--n- 480.00m 244.00m    ............244m free
+
+
+
+[root@server1 ~]# lvcreate -L 100m -n web_lv vg1
+  Logical volume "web_lv" created.    ...... NOTE sharing a block storage , not file system (xfs, ext4)
+
+
+
+
+
+[root@server1 ~]# lvscan
+  ACTIVE            '/dev/vg1/lv1' [236.00 MiB] inherit
+  ACTIVE            '/dev/vg1/web_lv' [100.00 MiB] inherit ................
+  ACTIVE            '/dev/cs_master/swap' [3.00 GiB] inherit
+  ACTIVE            '/dev/cs_master/root' [<26.00 GiB] inherit
+
+
+
+  LV     VG        Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  root   cs_master -wi-ao---- <26.00g                               
+  swap   cs_master -wi-ao----   3.00g                               
+  lv1    vg1       -wi-ao---- 236.00m                               
+  web_lv vg1       -wi-a----- 100.00m  .......................
+
+
+
+
+
+
+
+
+
+07_04-Configure iSCSI Target
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
+[root@server1 ~]# hostname
+server1.sanjeevthapa.com
 
 
 
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+[root@server1 ~]# targetcli                 .....................
+
+
+Warning: Could not load preferences file /root/.targetcli/prefs.bin.
+targetcli shell version 2.1.53
+Copyright 2011-2013 by Datera, Inc and others.
+For help on commands, type 'help'.
+
+/> ls
+o- / ......................................................... [...]
+  o- backstores .............................................. [...]
+  | o- block .................................. [Storage Objects: 0]
+  | o- fileio ................................. [Storage Objects: 0]
+  | o- pscsi .................................. [Storage Objects: 0]
+  | o- ramdisk ................................ [Storage Objects: 0]
+  o- iscsi ............................................ [Targets: 0]
+  o- loopback ......................................... [Targets: 0]
+/>
+
+
+/> backstores/block create web_store /dev/vg1/web_lv      .....................
+Created block storage object web_store using /dev/vg1/web_lv.
+/> ls
+o- / ......................................................... [...]
+  o- backstores .............................................. [...]
+  | o- block .................................. [Storage Objects: 1]
+  | | o- web_store  [/dev/vg1/web_lv (100.0MiB) write-thru deactivated]
 
 
 
 
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/> iscsi/ create iqn.2024-02.com.sanjeevthapa.server1:web          .....................
+Created target iqn.2024-02.com.sanjeevthapa.server1:web.
+Created TPG 1.
+Global pref auto_add_default_portal=true
+Created default portal listening on all IPs (0.0.0.0), port 3260.
+/> ls
+
+  o- iscsi ............................................ [Targets: 1]
+  | o- iqn.2024-02.com.sanjeevthapa.server1:web .......... [TPGs: 1]
+  |   o- tpg1 ............................... [no-gen-acls, no-auth]
+  |     o- acls .......................................... [ACLs: 0]
+  |     o- luns .......................................... [LUNs: 0]
+  |     o- portals .................................... [Portals: 1]
+  |       o- 0.0.0.0:3260 ..................................... [OK}  ........ listening port 3260
+
+
+/> cd iscsi/iqn.2024-02.com.sanjeevthapa.server1:web/tpg1/luns    ........ listening port 3260
+/iscsi/iqn.20...web/tpg1/luns> create /backstores/block/web_store    ........ 
+Created LUN 0.
+
+
+
+
+
+
+/iscsi/iqn.20...a.server1:web> cd tpg1/acls      ...............
+/iscsi/iqn.20...web/tpg1/acls> create iqn.2024-02.com.mivaanthapa.server2:web    ............... client acesss ACL ...
+Created Node ACL for iqn.2024-02.com.mivaanthapa.server2:web
+Created mapped LUN 0.
+
+
+
+
+
+
+
+
+
+/iscsi/iqn.20...web/tpg1/acls> cd /
+
+/> ls
+o- / ................................................................... [...]
+  o- backstores ........................................................ [...]
+  | o- block ............................................ [Storage Objects: 1]
+  | | o- web_store ......... [/dev/vg1/web_lv (100.0MiB) write-thru activated]
+  | |   o- alua ............................................. [ALUA Groups: 1]
+  | |     o- default_tg_pt_gp ................. [ALUA state: Active/optimized]
+  | o- fileio ........................................... [Storage Objects: 0]
+  | o- pscsi ............................................ [Storage Objects: 0]
+  | o- ramdisk .......................................... [Storage Objects: 0]
+  o- iscsi ...................................................... [Targets: 1]
+  | o- iqn.2024-02.com.sanjeevthapa.server1:web .................... [TPGs: 1]
+  |   o- tpg1 ......................................... [no-gen-acls, no-auth]
+  |     o- acls .................................................... [ACLs: 1]
+  |     | o- iqn.2024-02.com.mivaanthapa.server2:web ........ [Mapped LUNs: 1]
+  |     |   o- mapped_lun0 ....................... [lun0 block/web_store (rw)]
+  |     o- luns .................................................... [LUNs: 1]
+  |     | o- lun0 ..... [block/web_store (/dev/vg1/web_lv) (default_tg_pt_gp)]
+  |     o- portals .............................................. [Portals: 1]
+  |       o- 0.0.0.0:3260 ............................................... [OK]
+  o- loopback ................................................... [Targets: 0]
+/>
+
+
+/> exit
+Global pref auto_save_on_exit=true
+Configuration saved to /etc/target/saveconfig.json
+
+
+
+
+
+[root@server1 ~]# netstat -tnl | grep 3260
+tcp        0      0 0.0.0.0:3260            0.0.0.0:*               LISTEN 
+
+
+
+
+
+07_05-Configure iSCSI Initiator(Client)
++++++++++++++++++++++++++++++++++++++++++++++++++++++++ SERVER2
+
+
+server1.sanjeevthapa.com          .............iSCSI Target / must be running 
+[root@server1 ~]# hostname -I
+192.168.1.111
+
+
+[root@server2 ~]# hostname    ...............iSCSI Initiator
+server2.mivaanthapa.com
+[root@server2 ~]# hostname -I
+192.168.1.112
+
+
+
+
+[root@server2 ~]# yum list available  | grep iscsi
+iscsi-initiator-utils.i686                             6.2.1.4-8.git095f59c.el8  
+
+
+
+
+[root@server2 ~]# yum  -y install iscsi-initiator-utils
+
+
+
+[root@server2 ~]# vi /etc/iscsi/initiatorname.iscsi
+InitiatorName=iqn.2024-02.com.mivaanthapa.server2:web                  ...... server2 iqn
+
+
+
+
+[root@server2 ~]# iscsiadm --mode discovery --type sendtargets --portal  192.168.1.111 --discover                                      .................. walla it finds iscsi target
+192.168.1.111:3260,1 iqn.2024-02.com.sanjeevthapa.server1:web
+
+
+                                            OR
+
+iscsiadm --mode discovery --type sendtargets --portal  server1.sanjeevthapa.com --discover      .............................. make entry ip and domain in ... hosts file
+
+
+
+
+
+
+
+
+
+
+connecting isci target 
+------------------------ sharing bock device (by isci)
+
+[root@server2 ~]# lsblk
+NAME               MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda                  8:0    0   30G  0 disk
+├─sda1               8:1    0    1G  0 part /boot
+└─sda2               8:2    0   29G  0 part
+  ├─cs_master-root 253:0    0   26G  0 lvm  /
+  └─cs_master-swap 253:1    0    3G  0 lvm  [SWAP]
+sr0                 11:0    1 1024M  0 rom
+
+
+
+connecting isci target 
+------------------------
+[root@server2 ~]# iscsiadm --mode node --targetname iqn.2024-02.com.sanjeevthapa.server1:web  --portal 192.168.1.111 --login
+
+Logging in to [iface: default, target: iqn.2024-02.com.sanjeevthapa.server1:web, portal: 192.168.1.111,3260]
+Login to [iface: default, target: iqn.2024-02.com.sanjeevthapa.server1:web, portal: 192.168.1.111,3260] successful.
+
+
+
+
+
+[root@server2 ~]# lsblk  /dev/sdb
+NAME MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sdb    8:16   0  100M  0 disk  ................................ NOW 100M of block storage is attached from server1
+
+
+
+
+AFTER THAT MAKE YOURS FILE SYSTEM ................ MOUNT IT ............... CREATE A FILE ........ N CHECK IT
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 ===============================================================================
-
+08. Implementing HA Clusters
 ===============================================================================
 
++----------------------+
+|                      |
+|  HA Cluster Scenario |
+|                      |
++----------------------+
+             |
+             v
++----------------------+
+|                      |
+|   Node 1 (Active)    |
+|   [Service A]        |
+|   [Service B]        |
+|   [Virtual IP]        |
+|                      |
++----------------------+
+             |
+             v
++----------------------+
+|                      |
+|   Node 2 (Passive)   |
+|   [Service A]        |
+|   [Service B]        |
+|                      |
++----------------------+
+
+
+Implementing High Availability (HA) clusters involves setting 
+up a redundant and fault-tolerant infrastructure to ensure 
+continuous availability of services in the event of 
+hardware failures, software issues, or other disruptions. 
 
 
 
 
+Here is a general outline of the steps involved in implementing HA clusters:
+---------------------------------------------------------------------------
+
+1. Define Requirements and Scope:
+--------------------------------------------
+        Identify critical services and applications that need high availability.
+      
+        Determine the level of redundancy and fault tolerance required.
+      
+        Define the scope of the HA cluster, considering both hardware 
+        and software components.
+
+
+2. Choose HA Cluster Software:
+--------------------------------------------
+      Select an appropriate HA clustering solution based on your 
+      platform and requirements. 
+      
+      Common choices include:
+              Linux-HA (Corosync/Pacemaker): 
+                        Widely used for Linux environments.
+              
+              Microsoft Failover Cluster: 
+                        For Windows Server environments.
+      
+              Veritas Cluster Server (VCS): 
+                        Provides cross-platform support.
+
+
+
+
+3. Design Cluster Architecture:
+--------------------------------------------
+      Plan the architecture with considerations for redundancy, failover 
+      mechanisms, and load balancing.
+      
+      Define the number of nodes in the cluster and their 
+      roles (active, passive, or both).
+      
+      Configure networking settings and IP addresses for virtual IPs (VIPs).
+
+
+
+
+4. Hardware Redundancy:
+--------------------------------------------
+      Ensure hardware redundancy for critical components such as 
+      power supplies, network interfaces, and storage.
+      
+      Use multiple servers to eliminate single points of failure.
+
+
+
+
+5. Shared Storage:
+--------------------------------------------
+      If required, set up shared storage to be accessible by 
+      all nodes in the cluster.
+      
+      Consider redundant storage options like SAN (Storage Area Network) 
+      or distributed file systems.
+
+
+
+6. Configure Cluster Software:
+--------------------------------------------
+      Install and configure the chosen HA cluster software on each node.
+      
+      Define cluster resources, services, and dependencies.
+      
+      Configure fencing mechanisms to isolate failed nodes.
+
+
+
+
+7. Test Failover Scenarios:
+--------------------------------------------
+      Conduct thorough testing of failover scenarios to ensure that 
+      the cluster behaves as expected during various failure conditions.
+      
+      Test node failures, network failures, and application/service failovers.
+
+
+
+
+8. Monitor and Manage:
+--------------------------------------------
+      Implement monitoring tools to continuously monitor the health 
+      of the cluster and its components.
+      
+      Set up alerts and notifications for potential issues.
+      
+      Implement a management interface for manual intervention 
+      and configuration changes.
+
+
+9. Documentation:
+--------------------------------------------
+      Create detailed documentation for the HA cluster setup, 
+      configuration, and maintenance procedures.
+      
+      Include information on troubleshooting and recovery procedures.
+
+
+
+
+10. Maintenance and Updates:
+--------------------------------------------
+      Regularly update and patch the HA cluster software a
+      nd operating system.
+      
+      Plan for scheduled maintenance windows to avoid 
+      service disruptions.
+
+
+11. Training and Documentation:
+--------------------------------------------
+      Provide training to administrators on managing and 
+      troubleshooting the HA cluster.
+      
+      Keep documentation up-to-date as the cluster evolves.
+
+
+
+12. Disaster Recovery Plan:
+--------------------------------------------
+      Develop a disaster recovery plan outlining procedures for
+      recovering from catastrophic failures.
+
+
+
+
+
+  Remember that the specific steps and considerations may vary 
+  depending on the chosen HA clustering solution and the operating 
+  systems involved. 
+  
+  Always refer to the documentation provided by the HA clustering 
+  software for detailed instructions and best practices.
+
+
+
+
+
+
+
+
+08_01-Introduction to HA Clusters
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+08_02-Installing Pacemaker
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+08_03-Creating the Cluster
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+08_04-Understanding STONITH and QUORUM
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+08_05-Clustering an IP Address
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+08_06-Installing and Configuring Apache
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+08_07-Clustering Apache
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 
 
 
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 
