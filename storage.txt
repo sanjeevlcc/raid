@@ -5,7 +5,8 @@
 ===============================================================================
 
 
-Linux storage management refers to the set of processes, tools, and techniques used to manage and control storage resources on Linux-based systems. 
+Linux storage management refers to the set of processes, tools, and techniques 
+used to manage and control storage resources on Linux-based systems. 
 
                     This includes managing 
                     disk partitions, 
@@ -14,7 +15,10 @@ Linux storage management refers to the set of processes, tools, and techniques u
                     RAID configurations, 
                     and other storage-related aspects. 
 
-Effective storage management is crucial for optimizing performance, ensuring data integrity, and maximizing storage utilization. Here are key components of Linux storage management:
+Effective storage management is crucial for optimizing performance, ensuring 
+data integrity, and maximizing storage utilization. 
+
+Here are key components of Linux storage management:
 
 
 Disk Partitions:
