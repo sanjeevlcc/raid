@@ -474,7 +474,10 @@ I/O size (minimum/optimal): 512 bytes / 512 bytes
 
 
 
-root@server1 ~]# fdisk /dev/sdb
+
+
+
+root@server1 ~]# fdisk /dev/sdb  ....................taking full 8g as partion whole disk
 Command (m for help): n
 Partition type
    p   primary (0 primary, 0 extended, 4 free)
@@ -499,7 +502,7 @@ Disk identifier: 0xd1c413e2
 Device     Boot Start      End  Sectors Size Id Type
 /dev/sdb1        2048 16777215 16775168   8G 83 Linux
 
-Command (m for help): w    ........................ dow saving the changes
+Command (m for help): w    ........................ now saving the changes
 The partition table has been altered.
 Calling ioctl() to re-read partition table.
 Syncing disks.
@@ -531,7 +534,7 @@ sr0                 11:0    1 1024M  0 rom
 
 
 dd disk duplicator
-
+----------------------
 [root@server1 ~]# dd if=/dev/zero of=/dev/sdb count=1 bs=512 ..........dd disk duplicator / wiping the disk partations
 1+0 records in
 1+0 records out
@@ -547,7 +550,7 @@ sda                  8:0    0   30G  0 disk
 └─sda2               8:2    0   29G  0 part
   ├─cs_master-root 253:0    0   26G  0 lvm  /
   └─cs_master-swap 253:1    0    3G  0 lvm  [SWAP]
-sdb                  8:16   0    8G  0 disk  ............. sdb1 is wiped out
+sdb                  8:16   0    8G  0 disk  ............. partation as sdb1 is wiped out
 sr0                 11:0    1 1024M  0 rom
 
 
@@ -561,7 +564,7 @@ I/O size (minimum/optimal): 512 bytes / 512 bytes
 
 
 again sample example for 
-crtearing 600m, 1200m,900m,1g size partions
+creating 600m, 1200m,900m,1g size partions
 ------------------------------------------------------------
 
 [root@server1 ~]# fdisk /dev/sdb
@@ -1232,7 +1235,7 @@ Superblock backups stored on blocks:
 Allocating group tables: done
 Writing inode tables: done
 Creating journal (4096 blocks): done
-Writing superblocks and filesystem accounting information: done
+Writing superblocks and filesystem accounting informtation: done
 
 
 
