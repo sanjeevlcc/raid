@@ -4927,9 +4927,129 @@ luks            -fstype=xfs     :/dev/mapper/luks-data
 ===============================================================================
 
 
-===============================================================================
+
+
+
+
 
 ===============================================================================
+                            SUMMARY
+===============================================================================
+
+
+
+----fdisk------
+fdisk /dev/sdb		(-l)
+n,p,L,t,w
+
+dd if=/dev/zero of=/dev/sdb count=1 bs=512
+
+---gdisk -------
+gdisk /dev/sdb
+p,n,w
+
+dd if=/dev/zero of=/dev/sdb count=2 bs=16K
+gdisk -l /dev/sdb
+
+---parted -------
+parted /dev/sdb  print
+parted /dev/sdb
+
+  print,  mklabel msdos, print,mklabel msdos
+  mkpart primary 1 200, print,
+  mkpart logical 202 300
+
+dd if=/dev/zero of=/dev/sdb count=1 bs=512
+
+
+---script-------
+parted -s /dev/sdc -- mklabel msdos mkpart extended 1m -1m
+parted -s /dev/sdc mkpart logical 200m 500m
+parted -s /dev/sdc mkpart logical 501m 700m
+
+-----ext4/ mount------
+mkfs.ext4 -L mero_data /dev/sdb6
+tune2fs -L mydata -c 0 -i 0 /dev/sdb6
+dumpe2fs /dev/sdb6
+
+mount /dev/sdb6 /mnt/
+ls /mnt/
+mount 
+umount /mnt
+
+
+mkdir /myfolder_for_ext
+mount /dev/sdb6  /myfolder_for_ext/
+mount | grep -i myfolder_for_ext
+ls /myfolder_for_ext/
+
+mount -o remount,noexec /dev/sdb6 /myfolder_for_ext/
+
+
+blkid  /dev/sdb6
+vi /etc/fstab
+  UUID="adc89631-467c-415d-a4e7-a1becfd31337"             /data/mydata    ext4 noexec     0 2
+mount -a
+df -h
+
+----xfs/ mount-------
+mkfs.xfs -b size=1k -l size=10m /dev/sdb7
+xfs_db -x /dev/sdb7
+xfs_info  /dev/sdb7
+
+
+blkid  /dev/sdb7
+mkdir /myxfs
+vi /etc/fstab
+    /dev/sdb7               /myxfs                     xfs     defaults       0 0
+mount -a
+df -h
+mount  | grep myxfs
+touch /myxfs/file1 file2
+
+
+---PV/VG/LV--------
+pvscan
+vgscan
+lvscan
+
+pvs
+vgs
+lvs
+
+pvcreate /dev/sdb10
+pvcreate /dev/sdb11
+pvcreate /dev/sdb12
+
+vgcreate vg1 /dev/sdb10 /dev/sdb11
+lvcreate -n lv1 -L 184m vg1
+
+mkfs.xfs /dev/vg1/lv1
+mkdir /my-lvm
+vi /etc/fstab
+	/dev/vg1/lv1    /my-lvm         xfs     defaults        0 0
+mount -a
+df -h
+mount  | grep lv1
+touch /my-lvm/filr1 file2
+
+
+----resize-------
+df -h | grep my-lvm
+vgs
+lvextend -L +50m /dev/vg1/lv1
+xfs_growfs /my-lvm/
+
+-----------
+
+
+
+
+
+
+
+
+
 
 
 
