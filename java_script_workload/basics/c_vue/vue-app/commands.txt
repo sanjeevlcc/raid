@@ -1,0 +1,111 @@
+First, you'll need to install Vue CLI if you haven't already. You can install it globally using npm:
+
+npm install -g @vue/cli
+
+
+=================
+
+Then, create a new Vue.js project:
+
+vue create vue-app
+
+======
+tree
+
+
+ls
+README.md        commands.txt   node_modules  public  vue.config.js
+babel.config.js  jsconfig.json  package.json  src     yarn.lock
+
+
+==============
+
+
+
+
+
+cd vue-app
+
+
+==============
+
+
+Write the Vue.js Application Code:
+Open the src/App.vue file and replace its contents with the following code:
+
+
+@sanjeevlcc ➜ .../java_script_workload/basics/c_vue/vue-app (main) $ vi src/App.vue
+
+<template>
+  <div id="app">
+    <h1>{{ message }}</h1>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      message: 'Hello World from Vue.js!'
+    };
+  }
+};
+</script>
+
+<style>
+#app {
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+</style>
+
+
+=======================================
+
+Dockerfile
+
+# Use the official Node.js image as a base image
+FROM node:latest
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy package.json and package-lock.json (if available)
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the application files
+COPY . .
+
+# Build the Vue.js application for production
+RUN npm run build
+
+# Expose port 80 for the Vue.js application
+EXPOSE 80
+
+# Command to run the Vue.js application
+CMD ["npm", "run", "serve"]
+
+
+
+
+
+====================
+
+docker build -t hello-vue-app .
+
+docker run -d -p 8080:80 hello-vue-app
+
+          http://localhost:8080 
+==============================
+
+ docker images
+REPOSITORY      TAG       IMAGE ID       CREATED          SIZE
+hello-vue-app   latest    be085685c878   18 seconds ago   1.49GB
+
+
+
+
+
