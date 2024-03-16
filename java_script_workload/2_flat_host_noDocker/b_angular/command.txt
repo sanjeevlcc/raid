@@ -1,0 +1,104 @@
+
+
+****************************
+ (main) $ node -v
+v20.11.1
+(main) $ npm -v
+10.2.4
+
+
+
+********************************************************
+Install AngularJS on Ubuntu 22.04
+
+(main) $ sudo npm install -g @angular/cli
+
+
+********************************************************
+
+(main) $ sudo ng version
+ 
+     _                      _                 ____ _     ___
+    / \   _ __   __ _ _   _| | __ _ _ __     / ___| |   |_ _|
+   / △ \ | '_ \ / _` | | | | |/ _` | '__|   | |   | |    | |
+  / ___ \| | | | (_| | |_| | | (_| | |      | |___| |___ | |
+ /_/   \_\_| |_|\__, |\__,_|_|\__,_|_|       \____|_____|___|
+                |___/
+    
+
+Angular CLI: 17.3.0
+Node: 20.11.1
+Package Manager: npm 10.5.0
+OS: linux x64
+
+Angular: 
+... 
+
+Package                      Version
+------------------------------------------------------
+@angular-devkit/architect    0.1703.0 (cli-only)
+@angular-devkit/core         17.3.0 (cli-only)
+@angular-devkit/schematics   17.3.0 (cli-only)
+@schematics/angular          17.3.0 (cli-only)
+
+
+********************************************************
+Create AngularJS Application
+
+(main) $ sudo ng new angular-demo-app 
+
+
+
+********************************************************
+(main) $ ls
+angular-demo-app  command.txt
+
+********************************************************
+  (main) cd angular-demo-app/
+
+ (main) $ ls
+README.md     node_modules       package.json  src                tsconfig.json
+angular.json  package-lock.json  server.ts     tsconfig.app.json  tsconfig.spec.json
+
+********************************************************
+
+
+Once you are in the project folder you can 
+start Angular application in development mode with 
+the following command:
+
+By default ng serve 
+start application on localhost on port 4200.
+
+
+(main) $ sudo ng serve
+
+
+
+
+********************************************************
+Alternatively, you can change the host and
+ port on which the application is running using:
+
+
+Here, the application is running on 
+IP address 0.0.0.0 and port 8000.
+
+
+(main) $ sudo ng serve --host 0.0.0.0 --port 8000
+
+
+
+********************************************************
+Watch mode enabled. Watching for file changes...
+  ➜  Local:   http://localhost:8000/
+  ➜  Network: http://172.16.5.4:8000/
+
+****************************
+
+
+(main) $ ls
+README.md     package-lock.json  src                tsconfig.spec.json
+angular.json  package.json       tsconfig.app.json
+node_modules  server.ts          tsconfig.json
+
