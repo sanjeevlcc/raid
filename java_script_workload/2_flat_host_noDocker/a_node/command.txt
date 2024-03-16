@@ -1,0 +1,65 @@
+
+============
+
+tree
+.
+└── command.txt
+
+============
+mkdir my-node-app
+cd my-node-app
+
+
+============
+sudo apt install curl
+
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+
+sudo apt install nodejs npm
+
+
+============
+
+(main) $ node -v
+v20.11.1
+ (main) $ npm -v
+10.2.4
+============
+
+
+
+
+
+
+
+
+============
+
+mkdir my-node-app
+cd my-node-app
+
+============
+touch app.js
+
+============
+
+
+cat  > app.js 
+
+console.log("Hello World from Node.js!");
+
+============
+npm install
+
+============
+
+
+
+
+
+
+
+
+
+
+
