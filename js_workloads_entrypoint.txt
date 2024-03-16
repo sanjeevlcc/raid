@@ -1,0 +1,126 @@
+
+
+
+
+
+
+
+MERN is a popular stack for building full-stack web applications
+---------------------------------------------------------------
+M: MongoDB (a NoSQL database)
+E: Express.js (a web application framework for Node.js)
+R: React (a JavaScript library for building user interfaces)
+N: Node.js (a JavaScript runtime environment)
+
+
+
+
+
+
+
+
+MEAN is a modern software stack used for building full-stack web applications
+--------------------------------------------------------------
+M: MongoDB (a NoSQL database)
+E: Express.js (a web application framework for Node.js)
+A: Angular (a JavaScript framework for building web applications)
+N: Node.js (a JavaScript runtime environment)
+
+
+
+
+
+
+LAMP is a traditional software stack used for building dynamic web applications
+---------------------------------------------------------------
+L: Linux (the operating system)
+A: Apache (the web server)
+M: MySQL (the relational database management system)
+P: PHP (the server-side scripting language)
+
+
+
+
+
+
+
+
+MEVN is a software stack similar to MEAN, with the 
+addition of Vue.js instead of Angular for building user interfaces
+---------------------------------------------------------------
+M: MongoDB (a NoSQL database)
+E: Express.js (a web application framework for Node.js)
+V: Vue.js (a progressive JavaScript framework for building user interfaces)
+N: Node.js (a JavaScript runtime environment)
+
+
+
+
+
+XAMPP is not a software stack like MEAN or MEVN; instead, it's a software 
+package that provides a local development environment for web developers. 
+XAMPP stands for
+---------------------------------------------------------------
+X: Cross-platform (works on multiple operating systems)
+A: Apache (the web server)
+M: MySQL or MariaDB (the relational database management system)
+P: PHP (the server-side scripting language)
+P: Perl (sometimes included, but PHP is more commonly used)
+
+
+
+
+
+
+summarizing the major versions of JavaScript:
+---------------------------------------------------------------
+https://www.altamira.ai/blog/java-vs-javascript-whats-the-difference/
+
+.-----------------+---------------------.
+| Version         | Release Date        |
++-----------------+---------------------+
+| ES1             | June 1997           |
+| ES2             | June 1998           |
+| ES3             | December 1999       |
+| ES4             | Not released        |
+| ES5             | December 2009       |
+| ES6/ES2015      | June 2015           |
+| ES7/ES2016      | June 2016           |
+| ES8/ES2017      | June 2017           |
+| ES9/ES2018      | June 2018           |
+| ES10/ES2019     | June 2019           |
+| ES11/ES2020     | June 2020           |
+| ES12/ES2021     | June 2021           |
+| ES13/ES2022     | Expected in June 2022|
+'-----------------+---------------------'
+
+
+Node.js: 
+-------------
+Used for server-side development, providing a runtime 
+environment for executing JavaScript code on the server.
+
+
+AngularJS: 
+-------------
+Used for building client-side web applications, providing 
+a framework for building dynamic and interactive user interfaces.
+
+
+Vue.js:
+-------------
+Used for building user interfaces, providing a progressive 
+framework for creating modern and reactive web applications.
+
+It can be used for both client-side and server-side rendering,
+and it is often used in conjunction with other 
+technologies like Node.js.
+
+
+
+
+
+
+
+
+
