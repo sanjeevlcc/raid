@@ -1,0 +1,101 @@
+
+
+To run a basic "Hello World" AngularJS application using Docker, you'll need to follow these steps:
+
+Create an AngularJS application.
+Write the AngularJS application code.
+Create a Dockerfile to build the Docker image.
+Build the Docker image.
+Run the Docker container.
+
+
+
+
+
+======================
+
+
+
+mkdir angularjs-app
+cd angularjs-app
+
+
+
+
+====================
+
+
+
+Write the AngularJS Application Code:
+
+index.html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hello AngularJS</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+</head>
+<body ng-app="myApp">
+  <div ng-controller="myCtrl">
+    <h1>{{ message }}</h1>
+  </div>
+
+  <script>
+    var app = angular.module('myApp', []);
+    app.controller('myCtrl', function($scope) {
+      $scope.message = 'Hello World from AngularJS!';
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+======================================
+
+
+
+Dockerfile
+# Use a lightweight web server image as a base image
+FROM nginx:alpine
+
+# Copy the AngularJS application files to the default Nginx web server directory
+COPY . /usr/share/nginx/html
+
+
+
+
+=========
+
+
+docker build -t hello-angularjs-app .
+
+
+===========
+
+
+docker run -d -p 8080:80 hello-angularjs-app
+
+
+
+ http://localhost:8080
+
+
+Hello World from AngularJS!
+
+
+========
+
+
+
+
+
+REPOSITORY            TAG       IMAGE ID       CREATED          SIZE
+hello-angularjs-app   latest    52b960fb1354   2 minutes ago    42.6MB
+hello-node-app        latest    954d39802aa2   10 minutes ago   1.1GB
+CONTAINER ID   IMAGE                 COMMAND                  CREATED         STATUS         PORTS                                   NAMES
+0db133187b75   hello-angularjs-app   "/docker-entrypoint.…"   2 minutes ago   Up 2 minutes   0.0.0.0:8080->80/tcp, :::8080->80/tcp   funny_roentgen
