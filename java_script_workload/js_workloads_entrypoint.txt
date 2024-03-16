@@ -1,6 +1,9 @@
 
 
-
+M
+E
+X .. React, angular, vue
+N
 
 
 
@@ -107,7 +110,7 @@ Used for building client-side web applications, providing
 a framework for building dynamic and interactive user interfaces.
 
 
-Vue.js:
+Vue.js: 
 -------------
 Used for building user interfaces, providing a progressive 
 framework for creating modern and reactive web applications.
@@ -177,4 +180,14 @@ technologies like Node.js.
 
 
 
+
+
+
+
+ acronyms MLRP
+--------------------
+MySQL: Open-source relational database management system
+Laravel: PHP web application framework
+React: JavaScript library for building user interfaces
+PHP: Server-side scripting language for web development
 
