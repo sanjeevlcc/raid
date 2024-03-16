@@ -23,10 +23,8 @@ package.json
 
 
 Write the Node.js Application Code:
-Create an app.js
 
-
-
+app.js
 console.log("Hello World from Node.js!");
 
 
@@ -59,6 +57,35 @@ docker build -t hello-node-app .
 
 
 docker run hello-node-app
+
+
+
+REPOSITORY       TAG       IMAGE ID       CREATED         SIZE
+hello-node-app   latest    954d39802aa2   2 minutes ago   1.1GB
+
+
+
+CONTAINER ID   IMAGE            COMMAND                  CREATED         STATUS                     PORTS     NAMES
+d416521df148   hello-node-app   "docker-entrypoint.s…"   2 minutes ago   Exited (0) 2 minutes ago             elegant_burnell
+
+
+
+
+
+
+
+
+
+
+
+docker run hello-node-app
+
+> hello-node-app@1.0.0 start
+> node app.js
+
+Hello World from Node.js!
+
+
 
 
 
