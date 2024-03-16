@@ -1,4 +1,6 @@
 
+
+git add -A; git commit -m "v10" ; git push origin main 
 ============
 
 tree
