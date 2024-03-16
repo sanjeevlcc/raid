@@ -1,0 +1,82 @@
+
+
+====================
+
+
+index.html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World</title>
+</head>
+<body>
+    <h1 id="message">Hello World from Vanilla JavaScript!</h1>
+    <script>
+        document.getElementById("message").innerText = "Hello World from Vanilla JavaScript!";
+    </script>
+</body>
+</html>
+
+
+
+
+================
+
+
+
+Dockerfile
+
+# Use a lightweight web server image as a base image
+FROM nginx:alpine
+
+# Copy the HTML file to the default Nginx web server directory
+COPY index.html /usr/share/nginx/html
+
+
+====================
+
+
+docker build -t hello-vanilla-js-app .
+
+
+docker run -d -p 8080:80 hello-vanilla-js-app
+
+
+==================
+
+
+
+
+
+============
+
+
+http://localhost:8081
+
+
+Hello World from Vanilla JavaScript!
+
+
+
+===============
+ docker images
+REPOSITORY             TAG       IMAGE ID       CREATED         SIZE
+hello-vanilla-js-app   latest    6dff3b86a1f6   3 minutes ago   42.6MB
+
+
+
+
+
+
+docker ps
+CONTAINER ID   IMAGE                  COMMAND                  CREATED         STATUS         PORTS                                   NAMES
+328d8a60df75   hello-vanilla-js-app   "/docker-entrypoint.…"   3 minutes ago   Up 3 minutes   0.0.0.0:8081->80/tcp, :::8081->80/tcp   great_shannon
+
+
+
+
+
+
