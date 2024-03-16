@@ -119,6 +119,60 @@ technologies like Node.js.
 
 
 
+.-------------------+-------------------+----------------------+----------------------------+-------------------------+
+|     Aspect        |     Node.js       |       Angular        |         Vue.js             |      Vanilla JS         |                  
++-------------------+-------------------+----------------------+----------------------------+-------------------------+
+|    Origin         |  Ryan Dahl, Joyent|       Google         |     Evan You               |      Brendan Eich       | 
+|                   |                   |                      |                            |                         |      
+|    Developed by   |  OpenJS Foundation|       Google         |     Evan You               |       ECMA International|
+|                   |                   |                      |                            |                         | 
+|    Date           |  May 27, 2009     |    September 2010    |     February 2014          |      December 1995      |
+|                   |                   |                      |                            |                         |
+|    Features       |  Event-driven,    | Two-way data binding,| Reactive data binding,     | Core language for       |
+|                   |  non-blocking I/O,| Dependency injection,| Component-based            | building web            |
+|                   |  NPM ecosystem    | Modular structure,   | architecture, Virtual DOM, | applications,           |
+|                   |                   | RxJS Observables,   | Vue CLI                     | DOM manipulation,       |
+|                   |                   | Angular CLI         |                             | AJAX requests,          |
+|                   |                   |                      |                            | Browser compatibility,  |
+|                   |                   |                      |                            | Node.js compatibility   |
+|                   |                   |                      |                            | (via libraries)         |
+|                   |                   |                      |                            |                         |
+|    Compatibility |  Cross-platform   |  Web browsers,       |  Web browsers,              | All modern web browsers,|
+|                   |  (Windows, macOS, |  Web browsers,       |  Node.js,                  | Node.js                 |
+|                   |  Linux)           |  Node.js             |  Electron                  |                         |
+'-------------------+-------------------+----------------------+----------------------------+-------------------------+
+
+
+
+
+.---------------------------------+---------------------------------------.
+| Technology                      | Description                           |
++---------------------------------+---------------------------------------+
+| Node.js                         | JavaScript runtime environment for    |
+|                                 | server-side development.              |
+|                                 | Used for building APIs, server-side   |
+|                                 | applications, and real-time          |
+|                                 | applications.                         |
++---------------------------------+---------------------------------------+
+| AngularJS                       | JavaScript framework for building    |
+|                                 | dynamic client-side web applications. |
+|                                 | Provides features like two-way data   |
+|                                 | binding, dependency injection, and    |
+|                                 | directives.                           |
++---------------------------------+---------------------------------------+
+| Vue.js                          | Progressive JavaScript framework for |
+|                                 | building user interfaces. Designed to |
+|                                 | be incrementally adoptable. Offers    |
+|                                 | features like reactive data binding,  |
+|                                 | component-based architecture, and    |
+|                                 | virtual DOM rendering.                |
++---------------------------------+---------------------------------------+
+| Vanilla JavaScript              | Pure JavaScript without any          |
+|                                 | frameworks or libraries. Can be used  |
+|                                 | for both client-side and server-side |
+|                                 | development.                         |
+'---------------------------------+---------------------------------------'
+
 
 
 
