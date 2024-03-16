@@ -1,6 +1,6 @@
 
 
-git add -A; git commit -m "v10" ; git push origin main 
+git add -A; git commit -m "v11" ; git push origin main 
 ============
 
 tree
@@ -8,8 +8,7 @@ tree
 └── command.txt
 
 ============
-mkdir my-node-app
-cd my-node-app
+
 
 
 ============
@@ -46,20 +45,43 @@ touch app.js
 ============
 
 
-cat  > app.js 
-
-console.log("Hello World from Node.js!");
 
 ============
 npm install
 
 ============
 
+cat hello.js 
+
+const http = require('http');
+
+const hostname = 'localhost';
+const port = 3000;
+
+const server = http.createServer((req, res) => {
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
+  res.end('Hello World!\n');
+});
+
+server.listen(port, hostname, () => {
+  console.log(`Server running at http://${hostname}:${port}/`);
+});
 
 
 
+============
+
+node hello.js
+
+============
 
 
+
+Output
+Server running at http://localhost:3000/
+
+Hello World!
 
 
 
